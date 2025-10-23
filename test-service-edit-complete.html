@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Service Edit Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-4">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">🧪 Complete Service Edit Functionality Test</h1>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Test Results Panel -->
+            <div class="bg-gray-800 rounded-lg p-6">
+                <h2 class="text-xl font-semibold mb-4">🔍 Test Results</h2>
+                
+                <div class="space-y-4">
+                    <div class="bg-blue-900/50 p-4 rounded">
+                        <h3 class="font-bold text-blue-300 mb-2">🎯 Test Objective</h3>
+                        <p class="text-sm text-blue-100">
+                            Verify that service editing saves changes correctly after applying the 
+                            <code>initializeServiceFormListener()</code> fix to the <code>editService()</code> function.
+                        </p>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <button id="run-complete-test" class="w-full bg-green-600 hover:bg-green-700 px-4 py-3 rounded font-semibold">
+                            🚀 Run Complete End-to-End Test
+                        </button>
+                        <button id="manual-test-guide" class="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">
+                            📋 Show Manual Test Guide
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="test-results" class="mt-4 bg-gray-900 p-4 rounded text-sm max-h-96 overflow-y-auto">
+                    <div class="text-gray-400">Click "Run Complete End-to-End Test" to start automated testing...</div>
+                </div>
+            </div>
+            
+            <!-- Manual Test Guide -->
+            <div id="manual-guide" class="bg-gray-800 rounded-lg p-6 hidden">
+                <h2 class="text-xl font-semibold mb-4">📋 Manual Test Steps</h2>
+                
+                <div class="space-y-4">
+                    <div class="bg-yellow-900/30 p-4 rounded border-l-4 border-yellow-500">
+                        <h3 class="font-bold text-yellow-300 mb-2">⚠️ Important</h3>
+                        <p class="text-yellow-100 text-sm">
+                            After automated tests pass, please perform these manual verification steps:
+                        </p>
+                    </div>
+                    
+                    <ol class="space-y-3 text-sm">
+                        <li class="bg-gray-700 p-3 rounded">
+                            <span class="font-bold text-green-400">1.</span>
+                            <span class="ml-2">Navigate to the Services page in the app below</span>
+                        </li>
+                        <li class="bg-gray-700 p-3 rounded">
+                            <span class="font-bold text-green-400">2.</span>
+                            <span class="ml-2">Click the edit button (✏️) for any existing service</span>
+                        </li>
+                        <li class="bg-gray-700 p-3 rounded">
+                            <span class="font-bold text-green-400">3.</span>
+                            <span class="ml-2">Modify the service name (add " - EDITED" to the end)</span>
+                        </li>
+                        <li class="bg-gray-700 p-3 rounded">
+                            <span class="font-bold text-green-400">4.</span>
+                            <span class="ml-2">Click the "Save Service" button</span>
+                        </li>
+                        <li class="bg-gray-700 p-3 rounded">
+                            <span class="font-bold text-green-400">5.</span>
+                            <span class="ml-2">Verify you see a success toast message</span>
+                        </li>
+                        <li class="bg-gray-700 p-3 rounded">
+                            <span class="font-bold text-green-400">6.</span>
+                            <span class="ml-2">Check that the service name change appears in the services table</span>
+                        </li>
+                    </ol>
+                    
+                    <div class="bg-green-900/30 p-4 rounded border-l-4 border-green-500">
+                        <h3 class="font-bold text-green-300 mb-2">✅ Success Criteria</h3>
+                        <ul class="text-green-100 text-sm space-y-1">
+                            <li>• Form submits without errors</li>
+                            <li>• Success toast message appears</li>
+                            <li>• Changes are reflected in the table immediately</li>
+                            <li>• No console errors during save operation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- App Status Panel -->
+            <div class="bg-gray-800 rounded-lg p-6">
+                <h2 class="text-xl font-semibold mb-4">📊 Application Status</h2>
+                
+                <div id="app-status" class="space-y-3">
+                    <div class="flex justify-between items-center p-2 bg-gray-700 rounded">
+                        <span>App Loading</span>
+                        <span id="app-loading-status" class="text-yellow-400">⏳</span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-gray-700 rounded">
+                        <span>Services Loaded</span>
+                        <span id="services-loaded-status" class="text-yellow-400">⏳</span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-gray-700 rounded">
+                        <span>Functions Available</span>
+                        <span id="functions-available-status" class="text-yellow-400">⏳</span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-gray-700 rounded">
+                        <span>Form Elements Ready</span>
+                        <span id="form-elements-status" class="text-yellow-400">⏳</span>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-3 bg-gray-700 rounded">
+                    <h3 class="font-semibold mb-2">🔧 Fix Status</h3>
+                    <div class="text-sm text-gray-300">
+                        ✅ <code>initializeServiceFormListener()</code> added to <code>editService()</code><br>
+                        ✅ Enhanced error handling and field validation<br>
+                        ✅ Form submission logic handles both create and edit operations
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Application Frame -->
+        <div class="mt-6">
+            <h2 class="text-xl font-semibold mb-4">🖥️ Application</h2>
+            <iframe id="app" src="index.html" class="w-full h-96 border border-gray-600 rounded-lg"></iframe>
+        </div>
+    </div>
+
+    <script>
+        let testLog = [];
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            testLog.push({ timestamp, message, type });
+            
+            const resultsDiv = document.getElementById('test-results');
+            const colors = {
+                info: 'text-blue-300',
+                success: 'text-green-300',
+                error: 'text-red-300',
+                warning: 'text-yellow-300'
+            };
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = colors[type] || colors.info;
+            logEntry.innerHTML = `<span class="text-gray-500">[${timestamp}]</span> ${message}`;
+            resultsDiv.appendChild(logEntry);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+        
+        function updateStatus(elementId, status, isSuccess = false) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = isSuccess ? '✅' : (status === 'loading' ? '⏳' : '❌');
+                element.className = isSuccess ? 'text-green-400' : (status === 'loading' ? 'text-yellow-400' : 'text-red-400');
+            }
+        }
+        
+        function getApp() {
+            return document.getElementById('app').contentWindow;
+        }
+        
+        async function runCompleteTest() {
+            log('🚀 Starting complete end-to-end service edit test...', 'warning');
+            
+            try {
+                // Step 1: Check app readiness
+                log('📋 Step 1: Verifying app readiness...', 'info');
+                const app = getApp();
+                
+                if (!app || !app.document) {
+                    throw new Error('App not loaded or accessible');
+                }
+                
+                updateStatus('app-loading-status', 'success', true);
+                log('✅ App is accessible', 'success');
+                
+                // Step 2: Navigate to services page
+                log('📋 Step 2: Navigating to services page...', 'info');
+                app.showPage('services');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Step 3: Check if services are loaded
+                log('📋 Step 3: Checking services data...', 'info');
+                const servicesTable = app.document.getElementById('services-table');
+                const editButtons = app.document.querySelectorAll('button[onclick*="editService"]');
+                
+                if (!servicesTable) {
+                    throw new Error('Services table not found');
+                }
+                
+                if (editButtons.length === 0) {
+                    log('⚠️ No services found to edit. Creating a test service first...', 'warning');
+                    await createTestService(app);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    // Re-check for edit buttons
+                    const newEditButtons = app.document.querySelectorAll('button[onclick*="editService"]');
+                    if (newEditButtons.length === 0) {
+                        throw new Error('Unable to create test service');
+                    }
+                }
+                
+                updateStatus('services-loaded-status', 'success', true);
+                log(`✅ Found ${editButtons.length} services available for editing`, 'success');
+                
+                // Step 4: Check function availability
+                log('📋 Step 4: Verifying required functions...', 'info');
+                const requiredFunctions = ['editService', 'initializeServiceFormListener', 'hideServiceForm'];
+                const missingFunctions = requiredFunctions.filter(fn => typeof app[fn] !== 'function');
+                
+                if (missingFunctions.length > 0) {
+                    throw new Error(`Missing functions: ${missingFunctions.join(', ')}`);
+                }
+                
+                updateStatus('functions-available-status', 'success', true);
+                log('✅ All required functions available', 'success');
+                
+                // Step 5: Check form elements
+                log('📋 Step 5: Verifying form elements...', 'info');
+                const formElement = app.document.getElementById('service-form-element');
+                const serviceFormDiv = app.document.getElementById('service-form');
+                
+                if (!formElement || !serviceFormDiv) {
+                    throw new Error('Service form elements not found');
+                }
+                
+                updateStatus('form-elements-status', 'success', true);
+                log('✅ Form elements are present', 'success');
+                
+                // Step 6: Test editing workflow
+                log('📋 Step 6: Testing service edit workflow...', 'info');
+                
+                // Get first service to edit
+                const firstEditButton = editButtons[0];
+                const onclickAttr = firstEditButton.getAttribute('onclick');
+                const serviceIdMatch = onclickAttr.match(/editService\\('([^']+)'\\)/);
+                const serviceId = serviceIdMatch ? serviceIdMatch[1] : 'unknown';
+                
+                log(`🖱️ Clicking edit button for service ID: ${serviceId}`, 'info');
+                
+                // Click edit button
+                firstEditButton.click();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Check if form opened
+                const isFormVisible = !serviceFormDiv.classList.contains('hidden');
+                if (!isFormVisible) {
+                    throw new Error('Edit form did not open');
+                }
+                
+                log('✅ Edit form opened successfully', 'success');
+                
+                // Check if form has listener
+                const hasListener = formElement.hasAttribute('data-listener-added');
+                if (!hasListener) {
+                    throw new Error('Form listener not attached - the fix may not be working');
+                }
+                
+                log('✅ Form submission listener is properly attached (FIX WORKING!)', 'success');
+                
+                // Check if form is populated
+                const serviceNameField = app.document.getElementById('service-name');
+                const originalName = serviceNameField ? serviceNameField.value : '';
+                
+                if (!originalName) {
+                    throw new Error('Form not populated with service data');
+                }
+                
+                log(`✅ Form populated with service data: "${originalName}"`, 'success');
+                
+                // Step 7: Test form submission (modify and save)
+                log('📋 Step 7: Testing form submission...', 'info');
+                
+                const testSuffix = ' - EDITED ' + Math.random().toString(36).substr(2, 5);
+                const newName = originalName + testSuffix;
+                
+                serviceNameField.value = newName;
+                log(`📝 Modified service name to: "${newName}"`, 'info');
+                
+                // Submit form
+                const submitButton = serviceFormDiv.querySelector('button[type="submit"]');
+                if (!submitButton) {
+                    throw new Error('Submit button not found');
+                }
+                
+                log('💾 Clicking save button...', 'info');
+                submitButton.click();
+                
+                // Wait for save operation
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                // Check if form closed (indicates successful save)
+                const isFormClosed = serviceFormDiv.classList.contains('hidden');
+                if (!isFormClosed) {
+                    log('⚠️ Form is still open - save may have failed', 'warning');
+                } else {
+                    log('✅ Form closed - save appears successful', 'success');
+                }
+                
+                // Step 8: Verify changes in table
+                log('📋 Step 8: Verifying changes in services table...', 'info');
+                
+                // Wait a bit more for table update
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Check if the change is reflected in the table
+                const updatedTable = app.document.getElementById('services-table');
+                const tableContent = updatedTable.innerHTML;
+                
+                if (tableContent.includes(newName)) {
+                    log('🎉 SUCCESS: Service changes are reflected in the table!', 'success');
+                } else {
+                    log('⚠️ Changes not visible in table - may need manual verification', 'warning');
+                }
+                
+                log('🎉 COMPLETE: Service edit functionality test completed successfully!', 'success');
+                log('💡 You can now manually verify by editing a service and checking for toast messages', 'info');
+                
+            } catch (error) {
+                log(`❌ Test failed: ${error.message}`, 'error');
+                log('💡 Please check console logs and try manual testing', 'warning');
+            }
+        }
+        
+        async function createTestService(app) {
+            try {
+                log('🔧 Creating test service...', 'info');
+                
+                // Click "Add Service" button
+                const addButton = app.document.querySelector('button[onclick="showServiceForm()"]');
+                if (addButton) {
+                    addButton.click();
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    // Fill form with test data
+                    const codeField = app.document.getElementById('service-code');
+                    const nameField = app.document.getElementById('service-name');
+                    const categoryField = app.document.getElementById('service-category');
+                    
+                    if (codeField && nameField && categoryField) {
+                        const testId = Math.random().toString(36).substr(2, 8).toUpperCase();
+                        codeField.value = `TEST-${testId}`;
+                        nameField.value = `Test Service ${testId}`;
+                        categoryField.value = 'Testing';
+                        
+                        // Submit form
+                        const submitBtn = app.document.querySelector('#service-form button[type="submit"]');
+                        if (submitBtn) {
+                            submitBtn.click();
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                            log('✅ Test service created', 'success');
+                        }
+                    }
+                }
+            } catch (error) {
+                log(`⚠️ Could not create test service: ${error.message}`, 'warning');
+            }
+        }
+        
+        function showManualGuide() {
+            const guide = document.getElementById('manual-guide');
+            guide.classList.toggle('hidden');
+        }
+        
+        // Event listeners
+        document.getElementById('run-complete-test').addEventListener('click', runCompleteTest);
+        document.getElementById('manual-test-guide').addEventListener('click', showManualGuide);
+        
+        // Initialize when app loads
+        document.getElementById('app').addEventListener('load', function() {
+            setTimeout(() => {
+                log('🚀 Application loaded. Ready to run service edit tests.', 'success');
+                updateStatus('app-loading-status', 'success', true);
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

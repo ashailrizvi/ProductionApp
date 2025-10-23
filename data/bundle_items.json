@@ -1,0 +1,50 @@
+[
+  {
+    "id": "bni-001",
+    "bundleId": "bnd-001",
+    "childServiceId": "svc-002",
+    "childQty": 1,
+    "include": true,
+    "notes": "Camera operator"
+  },
+  {
+    "id": "bni-002",
+    "bundleId": "bnd-001",
+    "childServiceId": "svc-003",
+    "childQty": 1,
+    "include": true,
+    "notes": "Audio engineer"
+  },
+  {
+    "bundleId": "b6407bce-74d9-4934-a367-5214348c00ad",
+    "childServiceId": "srv-vid-day",
+    "childQty": 1,
+    "include": true,
+    "notes": "",
+    "id": "1"
+  },
+  {
+    "bundleId": "b6407bce-74d9-4934-a367-5214348c00ad",
+    "childServiceId": "rtl-cam-snyfx3",
+    "childQty": 1,
+    "include": true,
+    "notes": "",
+    "id": "2"
+  },
+  {
+    "bundleId": "b6407bce-74d9-4934-a367-5214348c00ad",
+    "childServiceId": "rtl-lens-gm",
+    "childQty": 1,
+    "include": true,
+    "notes": "",
+    "id": "3"
+  },
+  {
+    "bundleId": "b6407bce-74d9-4934-a367-5214348c00ad",
+    "childServiceId": "rtl-light-pkg",
+    "childQty": 1,
+    "include": true,
+    "notes": "",
+    "id": "4"
+  }
+]

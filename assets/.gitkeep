@@ -1,0 +1,33 @@
+# Assets Directory
+
+This directory is for optional branding assets:
+
+## PDF Branding Images (Optional)
+
+### letterhead.png
+- **Purpose**: Company letterhead for PDF invoices
+- **Recommended Size**: 800x200 pixels
+- **Format**: PNG (transparent background recommended)
+- **Position**: Top of PDF invoices
+
+### stamp.png  
+- **Purpose**: Company stamp/seal for PDF invoices
+- **Recommended Size**: 200x200 pixels
+- **Format**: PNG (transparent background recommended)
+- **Position**: Bottom-right of PDF invoices
+
+## How to Add Branding
+
+1. Create your letterhead and stamp images
+2. Save them as `letterhead.png` and `stamp.png`
+3. Upload them to this `assets/` directory
+4. The PDF generator will automatically include them
+
+## Graceful Fallback
+
+If these files are not present:
+- PDFs will generate normally without branding
+- No errors will occur
+- Professional layout is maintained
+
+This provides flexibility for teams that want basic functionality without custom branding.

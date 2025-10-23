@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Quotes & Invoices</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Print Styles -->
+    <style>
+        @media print {
+            /* Page settings */
+            @page {
+                margin: 0.5in;
+                size: A4;
+            }
+            
+            body {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            
+            /* Hide everything except the content when printing */
+            body * {
+                visibility: hidden;
+            }
+            
+            /* Show only the content area and its children */
+            #quotation-preview-content,
+            #quotation-preview-content *,
+            #invoice-preview-content,
+            #invoice-preview-content * {
+                visibility: visible;
+            }
+            
+            /* Position the content area for print */
+            #quotation-preview-content,
+            #invoice-preview-content {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: auto;
+                overflow: visible;
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+            
+            /* Ensure content styling is preserved */
+            #quotation-preview-content > div,
+            #invoice-preview-content > div {
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 20px !important;
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Initialize global navigation function early -->
+    <script>
+        // Global navigation function placeholder
+        window.showPage = function(page, subPage) {
+            console.log('Early showPage called for:', page, subPage);
+            // This will be replaced by the actual function when app.js loads
+            if (window._actualShowPage) {
+                window._actualShowPage(page, subPage);
+            } else {
+                // Queue the page to show once the app loads
+                window._pendingPage = { page, subPage };
+            }
+        };
+    </script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+    <!-- Access Password Gate -->
+    <div id="password-gate" class="hidden fixed inset-0 bg-gray-900 z-50 flex items-center justify-center">
+        <div class="bg-gray-800 rounded-lg p-8 shadow-xl max-w-md w-full mx-4">
+            <div class="text-center mb-6">
+                <i class="fas fa-lock text-4xl text-primary-500 mb-4"></i>
+                <h2 class="text-2xl font-bold">Access Required</h2>
+                <p class="text-gray-400">Please enter the access password to continue</p>
+            </div>
+            <form id="password-form">
+                <div class="mb-4">
+                    <input type="password" id="access-password" 
+                           class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                           placeholder="Enter password" required>
+                </div>
+                <button type="submit" 
+                        class="w-full bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded-lg transition-colors">
+                    <i class="fas fa-unlock mr-2"></i>Access Application
+                </button>
+            </form>
+            <div id="password-error" class="hidden mt-4 text-red-400 text-center">
+                <i class="fas fa-exclamation-triangle mr-2"></i>Invalid password. Please try again.
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="bg-gray-800 border-b border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-xl font-bold text-white">Production Q&I</h1>
+                    </div>
+                    <div class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="#dashboard" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700" data-page="dashboard" onclick="showPage('dashboard'); return false;">
+                                <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                            </a>
+
+                            <a href="#quotations" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700" data-page="quotations" onclick="showPage('quotations'); return false;">
+                                <i class="fas fa-file-contract mr-2"></i>Quotations
+                            </a>
+                            <a href="#invoices" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700" data-page="invoices" onclick="showPage('invoices'); return false;">
+                                <i class="fas fa-file-invoice mr-2"></i>Invoices
+                            </a>
+                            <a href="#settings" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700" data-page="settings" onclick="showPage('settings'); return false;">
+                                <i class="fas fa-cog mr-2"></i>Settings
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-button" class="text-gray-400 hover:text-white focus:outline-none focus:text-white">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-gray-800">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="#dashboard" class="nav-link-mobile block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700" data-page="dashboard" onclick="showPage('dashboard'); document.getElementById('mobile-menu').classList.add('hidden'); return false;">
+                    <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                </a>
+
+                <a href="#quotations" class="nav-link-mobile block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700" data-page="quotations" onclick="showPage('quotations'); document.getElementById('mobile-menu').classList.add('hidden'); return false;">
+                    <i class="fas fa-file-contract mr-2"></i>Quotations
+                </a>
+                <a href="#invoices" class="nav-link-mobile block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700" data-page="invoices" onclick="showPage('invoices'); document.getElementById('mobile-menu').classList.add('hidden'); return false;">
+                    <i class="fas fa-file-invoice mr-2"></i>Invoices
+                </a>
+                <a href="#settings" class="nav-link-mobile block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700" data-page="settings" onclick="showPage('settings'); document.getElementById('mobile-menu').classList.add('hidden'); return false;">
+                    <i class="fas fa-cog mr-2"></i>Settings
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Dashboard Page -->
+        <div id="page-dashboard" class="page-content">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-white mb-4">
+                    <i class="fas fa-tachometer-alt mr-3"></i>Dashboard
+                </h2>
+                <p class="text-gray-400">Welcome to Production Quotes & Invoices Management System</p>
+            </div>
+            
+            <!-- Quick Access -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:bg-gray-750 transition-colors cursor-pointer" onclick="showPage('services')">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-cogs text-2xl text-primary-500"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-400">Total Services</p>
+                                <p class="text-2xl font-semibold text-white" id="stats-services">-</p>
+                            </div>
+                        </div>
+                        <div class="text-gray-400">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:bg-gray-750 transition-colors cursor-pointer" onclick="showPage('bundles')">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-box text-2xl text-green-500"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-400">Active Bundles</p>
+                                <p class="text-2xl font-semibold text-white" id="stats-bundles">-</p>
+                            </div>
+                        </div>
+                        <div class="text-gray-400">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:bg-gray-750 transition-colors cursor-pointer" onclick="showPage('customers')">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-users text-2xl text-blue-500"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-400">Active Customers</p>
+                                <p class="text-2xl font-semibold text-white" id="stats-customers">-</p>
+                            </div>
+                        </div>
+                        <div class="text-gray-400">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-green-500 transition-colors cursor-pointer" onclick="showPage('quotations', 'new')">
+                    <div class="text-center">
+                        <i class="fas fa-file-contract text-3xl text-green-500 mb-4"></i>
+                        <h3 class="text-lg font-semibold text-white mb-2">Create Quotation</h3>
+                        <p class="text-gray-400">Build a new quotation for client</p>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-blue-500 transition-colors cursor-pointer" onclick="showPage('customers')">
+                    <div class="text-center">
+                        <i class="fas fa-user-plus text-3xl text-blue-500 mb-4"></i>
+                        <h3 class="text-lg font-semibold text-white mb-2">Manage Customers</h3>
+                        <p class="text-gray-400">View and manage your customer database</p>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-primary-500 transition-colors cursor-pointer" onclick="showPage('services')">
+                    <div class="text-center">
+                        <i class="fas fa-plus-circle text-3xl text-primary-500 mb-4"></i>
+                        <h3 class="text-lg font-semibold text-white mb-2">Manage Services</h3>
+                        <p class="text-gray-400">View and manage your services catalog</p>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-yellow-500 transition-colors cursor-pointer" onclick="showPage('settings')">
+                    <div class="text-center">
+                        <i class="fas fa-cogs text-3xl text-yellow-500 mb-4"></i>
+                        <h3 class="text-lg font-semibold text-white mb-2">Manage Settings</h3>
+                        <p class="text-gray-400">Configure currencies and defaults</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pricing Formula Reference -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mt-8">
+                <h3 class="text-xl font-semibold text-white mb-4">
+                    <i class="fas fa-calculator mr-2"></i>Pricing Formula Reference
+                </h3>
+                <div class="bg-gray-900 rounded p-4 font-mono text-sm">
+                    <div class="text-green-400 mb-2">// Adjusted Rate Calculation</div>
+                    <div class="text-gray-300 mb-4">
+                        <span class="text-yellow-400">AdjustedRate</span> = 
+                        (<span class="text-blue-400">Rate</span> + <span class="text-purple-400">BundleCost</span>) × 
+                        (1 + <span class="text-red-400">HeaderBuffer</span>) × 
+                        (1 + <span class="text-orange-400">LineBuffer</span>)
+                    </div>
+                    <div class="text-green-400 mb-2">// Line Total Calculation</div>
+                    <div class="text-gray-300">
+                        <span class="text-yellow-400">LineTotal</span> = 
+                        <span class="text-blue-400">AdjustedRate</span> × 
+                        <span class="text-cyan-400">Quantity</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services Page -->
+        <div id="page-services" class="page-content hidden">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-white mb-2">
+                        <i class="fas fa-cogs mr-3"></i>Services Manager
+                    </h2>
+                    <p class="text-gray-400">Manage your services and rates</p>
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="importServices()" 
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-upload mr-2"></i>Import Excel
+                    </button>
+                    <button onclick="exportServices()" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-download mr-2"></i>Export Excel
+                    </button>
+                    <button onclick="showServiceForm()" 
+                            class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Service
+                    </button>
+                </div>
+            </div>
+
+            <!-- Service Form -->
+            <div id="service-form" class="hidden bg-gray-800 rounded-lg p-6 border border-gray-700 mb-8">
+                <h3 class="text-xl font-semibold text-white mb-4" id="service-form-title">Add New Service</h3>
+                <form id="service-form-element">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Service Code *</label>
+                            <input type="text" id="service-code" required
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                   placeholder="SRV-XXX or RTL-XXX">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Service Name *</label>
+                            <input type="text" id="service-name" required
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                   placeholder="Enter service name">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Category</label>
+                            <input type="text" id="service-category"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                   placeholder="Production, Equipment, etc.">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Unit</label>
+                            <input type="text" id="service-unit"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                   placeholder="per day, per hour, etc.">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Base Rate</label>
+                            <input type="number" id="service-rate" step="0.01"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                   placeholder="Leave empty for TBD">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Currency</label>
+                            <select id="service-currency"
+                                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                                <option value="PKR">PKR</option>
+                                <option value="USD">USD</option>
+                                <option value="AED">AED</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Min Quantity</label>
+                            <input type="number" id="service-min-qty" min="0"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Max Quantity</label>
+                            <input type="number" id="service-max-qty" min="0"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                        </div>
+                        <div class="flex items-center space-x-6">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="service-optional"
+                                       class="w-4 h-4 text-primary-600 bg-gray-700 border-gray-600 rounded focus:ring-primary-500">
+                                <span class="ml-2 text-sm text-gray-400">Optional</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="service-negotiable"
+                                       class="w-4 h-4 text-primary-600 bg-gray-700 border-gray-600 rounded focus:ring-primary-500">
+                                <span class="ml-2 text-sm text-gray-400">Negotiable</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Content Types</label>
+                            <input type="text" id="service-content-types"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                   placeholder="Commercial, Corporate, etc.">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Team Roles</label>
+                            <input type="text" id="service-team-roles"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                   placeholder="Director, Camera, etc.">
+                        </div>
+                    </div>
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Includes</label>
+                            <textarea id="service-includes" rows="3"
+                                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                      placeholder="What this service includes..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Notes</label>
+                            <textarea id="service-notes" rows="3"
+                                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                      placeholder="Additional notes..."></textarea>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button type="button" onclick="hideServiceForm()" 
+                                class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-save mr-2"></i>Save Service
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Services Table -->
+            <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-700">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Service Code</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Category</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Rate</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Unit</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Flags</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="services-table" class="bg-gray-800 divide-y divide-gray-700">
+                            <!-- Services will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bundles Page -->
+        <div id="page-bundles" class="page-content hidden">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-white mb-2">
+                        <i class="fas fa-box mr-3"></i>Service Bundles
+                    </h2>
+                    <p class="text-gray-400">Create and manage service package bundles</p>
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="addSampleBundleData()" 
+                            class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-database mr-2"></i>Add Sample Data
+                    </button>
+                    <button onclick="importBundlesFromExcel()" 
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-upload mr-2"></i>Import Excel
+                    </button>
+                    <button onclick="exportBundlesReport()" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-download mr-2"></i>Export Report
+                    </button>
+                    <button onclick="showBundleBuilder()" 
+                            class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>New Bundle
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bundle Builder -->
+            <div id="bundle-builder" class="hidden bg-gray-800 rounded-lg p-6 border border-gray-700 mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-semibold text-white">Bundle Builder</h3>
+                    <div class="flex space-x-2">
+                        <button type="button" onclick="saveBundleAsDraft()" 
+                                class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-save mr-2"></i>Save Draft
+                        </button>
+                        <button type="button" onclick="hideBundleBuilder()" 
+                                class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-times mr-2"></i>Cancel
+                        </button>
+                    </div>
+                </div>
+                
+                <form id="bundle-form">
+                    <!-- Bundle Header -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Bundle Code *</label>
+                            <input type="text" id="bundle-code" required
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                   placeholder="BDL-BASIC-PROD">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Bundle Name *</label>
+                            <input type="text" id="bundle-name" required
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                   placeholder="Basic Production Package">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Parent Service</label>
+                            <select id="bundle-parent-service"
+                                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                                <option value="">Select parent service (optional)</option>
+                            </select>
+                        </div>
+                        <div class="col-span-full">
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Bundle Description</label>
+                            <textarea id="bundle-description" rows="3"
+                                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                      placeholder="Description of this service bundle..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Bundle Items -->
+                    <div class="mb-8">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-lg font-semibold text-white">Bundle Items</h4>
+                            <div class="flex space-x-2">
+                                <button type="button" onclick="refreshBundleServiceDropdowns()" 
+                                        class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                                        title="Refresh service dropdowns">
+                                    <i class="fas fa-refresh"></i>
+                                </button>
+                                <button type="button" onclick="addBundleItem()" 
+                                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                    <i class="fas fa-plus mr-2"></i>Add Item
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-gray-700 border border-gray-600 rounded-lg">
+                                <thead class="bg-gray-600">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase">Service</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase">Quantity</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase">Base Rate</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase">Total Cost</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase">Include</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase">Notes</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bundle-items-table" class="divide-y divide-gray-600">
+                                    <!-- Bundle items will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Bundle Summary -->
+                    <div class="bg-gray-700 rounded-lg p-6 mb-6">
+                        <h4 class="text-lg font-semibold text-white mb-4">Bundle Summary</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                            <div>
+                                <div class="text-2xl font-bold text-white" id="bundle-total-items">0</div>
+                                <div class="text-sm text-gray-400">Total Items</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-white" id="bundle-included-items">0</div>
+                                <div class="text-sm text-gray-400">Included Items</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-green-400" id="bundle-total-cost">PKR 0.00</div>
+                                <div class="text-sm text-gray-400">Total Cost</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-blue-400" id="bundle-included-cost">PKR 0.00</div>
+                                <div class="text-sm text-gray-400">Included Cost</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="hideBundleBuilder()" 
+                                class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-save mr-2"></i>Save Bundle
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Bundle Import Section -->
+            <div id="bundle-import-section" class="hidden bg-gray-800 rounded-lg p-6 border border-gray-700 mb-8">
+                <h3 class="text-xl font-semibold text-white mb-4">Import Bundles from Excel</h3>
+                <div class="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-400 mb-4">Select an Excel file to import bundle definitions</p>
+                    <input type="file" id="bundle-excel-input" accept=".xlsx,.xls" class="hidden" onchange="processBundleExcelFile(this.files[0])">
+                    <button onclick="document.getElementById('bundle-excel-input').click()" 
+                            class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        Choose File
+                    </button>
+                </div>
+                <div class="mt-4 flex justify-end">
+                    <button onclick="hideBundleImport()" 
+                            class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bundles List -->
+            <div id="bundles-list">
+                <div id="bundles-container">
+                    <!-- Bundles will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Customers Page -->
+        <div id="page-customers" class="page-content hidden">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-white mb-2">
+                        <i class="fas fa-users mr-3"></i>Customer Management
+                    </h2>
+                    <p class="text-gray-400">Manage your client database</p>
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="exportCustomers()" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-download mr-2"></i>Export Excel
+                    </button>
+                    <button onclick="showCustomerForm()" 
+                            class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Customer
+                    </button>
+                </div>
+            </div>
+
+            <!-- Customer Form -->
+            <div id="customer-form" class="hidden bg-gray-800 rounded-lg p-6 border border-gray-700 mb-8">
+                <h3 class="text-xl font-semibold text-white mb-4" id="customer-form-title">Add New Customer</h3>
+                <form id="customer-form-element">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Client Name *</label>
+                            <input type="text" id="customer-client-name" required
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                   placeholder="Company name">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Contact Person *</label>
+                            <input type="text" id="customer-contact-person" required
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                   placeholder="Primary contact name">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                            <input type="email" id="customer-email"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                   placeholder="contact@company.com">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Phone</label>
+                            <input type="tel" id="customer-phone"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                   placeholder="+92-300-1234567">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">City</label>
+                            <input type="text" id="customer-city"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                   placeholder="City">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Country</label>
+                            <input type="text" id="customer-country"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                   placeholder="Pakistan">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Tax/VAT ID</label>
+                            <input type="text" id="customer-tax-id"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                   placeholder="TAX-123456">
+                        </div>
+                        <div class="flex items-center">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="customer-active" checked
+                                       class="w-4 h-4 text-primary-600 bg-gray-700 border-gray-600 rounded focus:ring-primary-500">
+                                <span class="ml-2 text-sm text-gray-400">Active Customer</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Address</label>
+                            <textarea id="customer-address" rows="3"
+                                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                      placeholder="Complete address..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Notes</label>
+                            <textarea id="customer-notes" rows="3"
+                                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                      placeholder="Additional notes about the customer..."></textarea>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button type="button" onclick="hideCustomerForm()" 
+                                class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-save mr-2"></i>Save Customer
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Customers Table -->
+            <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-700">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Client Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Contact Person</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Contact Info</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Location</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customers-table" class="bg-gray-800 divide-y divide-gray-700">
+                            <!-- Customers will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quotations Page -->
+        <div id="page-quotations" class="page-content hidden">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-white mb-2">
+                        <i class="fas fa-file-contract mr-3"></i>Quotations
+                    </h2>
+                    <p class="text-gray-400">Manage your quotations and generate invoices</p>
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="exportQuotationsReport()" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-download mr-2"></i>Export Report
+                    </button>
+                    <button onclick="showPage('quotations', 'new')" 
+                            class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>New Quotation
+                    </button>
+                </div>
+            </div>
+
+            <!-- Current Template Status -->
+            <div id="quotation-template-status" class="bg-gray-800 rounded-lg p-4 border border-gray-700 mb-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="flex items-center">
+                            <i class="fas fa-building text-gray-400 mr-2"></i>
+                            <span class="text-sm font-medium text-gray-400">Current Template:</span>
+                            <span id="current-template-name" class="text-white font-medium ml-2">No template selected</span>
+                        </div>
+                        <div id="current-template-details" class="text-xs text-gray-500 mt-1"></div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button id="change-template-btn" onclick="showChangeTemplateModal()" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs transition-colors">
+                            <i class="fas fa-exchange-alt mr-1"></i>Change Template
+                        </button>
+                        <button onclick="showPage('settings')" 
+                                class="text-gray-400 hover:text-white text-xs transition-colors">
+                            <i class="fas fa-cog mr-1"></i>Manage Templates
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quotation Builder -->
+            <div id="quotation-builder" class="hidden">
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-semibold text-white">Quotation Builder</h3>
+                        <div class="flex space-x-2">
+                            <span class="text-sm text-gray-400">Status:</span>
+                            <span id="quotation-status-display" class="px-3 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm">
+                                Current
+                            </span>
+                            <input type="hidden" id="quotation-status" value="Current">
+                        </div>
+                    </div>
+                    
+                    <form id="quotation-form">
+                        <!-- Company Template Selector -->
+                        <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 mb-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Company Template *</label>
+                                    <select id="quotation-template" required
+                                            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                            onchange="applyQuotationTemplate()">
+                                        <option value="">Select a company template...</option>
+                                    </select>
+                                </div>
+                                <div class="text-sm text-gray-400">
+                                    <div id="template-company-info" class="hidden">
+                                        <div class="font-medium text-white" id="template-company-name-display"></div>
+                                        <div id="template-company-details-display"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quotation Header -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Quotation Number *</label>
+                                <input type="text" id="quotation-number" required
+                                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Client Name *</label>
+                                <div class="flex gap-2">
+                                    <select id="quote-client-dropdown" 
+                                            class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                            onchange="selectQuoteCustomer()">
+                                        <option value="">Select existing customer...</option>
+                                    </select>
+                                    <button type="button" onclick="loadQuoteCustomerDropdown()" 
+                                            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors"
+                                            title="Refresh customer list">
+                                        <i class="fas fa-refresh"></i>
+                                    </button>
+                                    <button type="button" onclick="clearQuoteCustomerSelection()" 
+                                            class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg transition-colors"
+                                            title="Clear selection to enter manually">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <input type="text" id="quote-client-name" required
+                                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white mt-2"
+                                       placeholder="Or enter client name manually">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Contact Person</label>
+                                <input type="text" id="quote-contact-person"
+                                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                       placeholder="Primary contact person">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Project Title</label>
+                                <input type="text" id="quote-project-title"
+                                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                       placeholder="Project name/description">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Currency</label>
+                                <select id="quotation-currency"
+                                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                                    <option value="PKR">PKR</option>
+                                    <option value="USD">USD</option>
+                                    <option value="AED">AED</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Issue Date</label>
+                                <input type="date" id="quote-issue-date"
+                                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Valid Until</label>
+                                <input type="date" id="quote-valid-until"
+                                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Header Buffer %</label>
+                                <input type="number" id="quote-header-buffer" step="0.01" value="0"
+                                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Tax Rate %</label>
+                                <input type="number" id="quote-tax-rate" step="0.01" value="9"
+                                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Discount Type</label>
+                                <select id="quote-discount-type"
+                                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                                    <option value="None">None</option>
+                                    <option value="Percent">Percent</option>
+                                    <option value="Amount">Amount</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Discount Value</label>
+                                <input type="number" id="quote-discount-value" step="0.01" value="0"
+                                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                            </div>
+                        </div>
+                        
+                        <!-- Client Address -->
+                        <div class="grid grid-cols-1 gap-6 mb-8">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Client Address</label>
+                                <textarea id="quote-client-address" rows="3"
+                                          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                          placeholder="Client address for quotation"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Bundle Toggle -->
+                        <div class="mb-6">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="quote-expand-bundles"
+                                       class="w-4 h-4 text-primary-600 bg-gray-700 border-gray-600 rounded focus:ring-primary-500">
+                                <span class="ml-2 text-sm text-gray-400">Expand Bundles (show individual items instead of bundle totals)</span>
+                            </label>
+                        </div>
+
+                        <!-- Line Items -->
+                        <div class="mb-8">
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <h4 class="text-lg font-semibold text-white">Line Items</h4>
+                                    <p class="text-sm text-gray-400 mt-1">First line: Select bundle package • Additional lines: Individual services/add-ons</p>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button type="button" onclick="refreshQuoteServiceDropdowns()" 
+                                            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                                            title="Refresh service dropdowns">
+                                        <i class="fas fa-refresh"></i>
+                                    </button>
+                                    <button type="button" onclick="addQuotationLine()" 
+                                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                        <i class="fas fa-plus mr-2"></i>Add Service/Add-on
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full bg-gray-800 border border-gray-700 rounded-lg">
+                                    <thead class="bg-gray-700">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase">Service</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase">Rate</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase">Bundle Cost</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase">Buffer %</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase">Adj. Rate</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase">Qty</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase">Total</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="quotation-lines" class="divide-y divide-gray-700">
+                                        <!-- Quotation lines will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Quotation Totals -->
+                        <div class="bg-gray-700 rounded-lg p-6 mb-8">
+                            <h4 class="text-lg font-semibold text-white mb-4">Quotation Totals</h4>
+                            <div class="grid grid-cols-2 gap-4 text-right">
+                                <div class="text-gray-400">Subtotal:</div>
+                                <div class="text-white font-semibold" id="quotation-subtotal">0.00</div>
+                                
+                                <div class="text-gray-400">Tax:</div>
+                                <div class="text-white" id="quotation-tax">0.00</div>
+                                
+                                <div class="text-gray-400">Discount:</div>
+                                <div class="text-white" id="quotation-discount">0.00</div>
+                                
+                                <div class="text-gray-400 text-lg font-semibold border-t border-gray-600 pt-2">Grand Total:</div>
+                                <div class="text-white text-lg font-bold border-t border-gray-600 pt-2" id="quotation-grand-total">0.00</div>
+                            </div>
+                        </div>
+
+                        <!-- Quotation Notes -->
+                        <div class="grid grid-cols-1 gap-6 mb-8">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Notes</label>
+                                <textarea id="quotation-notes" rows="4"
+                                          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                          placeholder="Additional notes for this quotation..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" onclick="showPage('quotations')" 
+                                    class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit" 
+                                    class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-save mr-2"></i>Save Quotation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quotations List -->
+            <div id="quotations-list" class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+                <!-- Filter and Search -->
+                <div class="p-4 border-b border-gray-700">
+                    <div class="flex flex-wrap gap-4 items-center">
+                        <div>
+                            <select id="status-filter" onchange="filterQuotations()"
+                                    class="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm">
+                                <option value="">All Status</option>
+                                <option value="Current">Current</option>
+                                <option value="Revised">Revised</option>
+                                <option value="Expired">Expired</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select id="client-filter" onchange="filterQuotations()"
+                                    class="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm">
+                                <option value="">All Clients</option>
+                            </select>
+                        </div>
+                        <div class="flex-1">
+                            <input type="text" id="search-quotations" placeholder="Search quotations..." 
+                                   onkeyup="filterQuotations()"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-700">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Quote #</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Client</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Project</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Total</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="quotations-table" class="bg-gray-800 divide-y divide-gray-700">
+                            <!-- Quotations will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination Controls -->
+                <div id="quotations-pagination" class="flex items-center justify-between py-6">
+                    <div class="text-sm text-gray-400">
+                        <span id="quotations-info">Showing 0 of 0 quotations</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button id="quotations-prev-btn" onclick="previousQuotationsPage()" 
+                                class="px-3 py-2 text-sm text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded border border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-left mr-1"></i>Previous
+                        </button>
+                        <div id="quotations-pages" class="flex space-x-1">
+                            <!-- Page numbers will be generated here -->
+                        </div>
+                        <button id="quotations-next-btn" onclick="nextQuotationsPage()" 
+                                class="px-3 py-2 text-sm text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded border border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                            Next<i class="fas fa-chevron-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Client Quotation History Modal -->
+            <div id="client-history-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+                <div class="bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-96 overflow-y-auto">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-semibold text-white" id="history-client-name">Client Quotation History</h3>
+                            <button onclick="closeClientHistory()" 
+                                    class="text-gray-400 hover:text-white">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div id="client-history-content" class="space-y-4">
+                            <!-- History content will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quotation Preview Modal -->
+            <div id="quotation-preview-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto print:max-h-none print:overflow-visible">
+                    <div class="p-8 print:p-0">
+                        <div class="flex justify-between items-center mb-6 print:hidden">
+                            <h3 class="text-xl font-semibold text-gray-800">Quotation Preview</h3>
+                            <div class="flex space-x-3">
+                                <button onclick="window.print()" 
+                                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
+                                    <i class="fas fa-print mr-2"></i>Print
+                                </button>
+                                <button onclick="closeQuotationPreview()" 
+                                        class="text-gray-400 hover:text-gray-600 bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="quotation-preview-content" class="space-y-6">
+                            <!-- Preview content will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoice Preview Modal -->
+            <div id="invoice-preview-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto print:max-h-none print:overflow-visible">
+                    <div class="p-8 print:p-0">
+                        <div class="flex justify-between items-center mb-6 print:hidden">
+                            <h3 class="text-xl font-semibold text-gray-800">Invoice Preview</h3>
+                            <div class="flex space-x-3">
+                                <button onclick="window.print()" 
+                                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
+                                    <i class="fas fa-print mr-2"></i>Print
+                                </button>
+                                <button onclick="closeInvoicePreview()" 
+                                        class="text-gray-400 hover:text-gray-600 bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="invoice-preview-content" class="space-y-6">
+                            <!-- Preview content will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoices Page -->
+        <div id="page-invoices" class="page-content hidden">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-white mb-2">
+                        <i class="fas fa-file-invoice mr-3"></i>Invoices
+                    </h2>
+                    <p class="text-gray-400">View and manage generated invoices</p>
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="exportInvoicesReport()" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-download mr-2"></i>Export Report
+                    </button>
+                    <button onclick="showInvoiceBuilder()" 
+                            class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>New Invoice
+                    </button>
+                </div>
+            </div>
+
+            <!-- Invoice Builder -->
+            <div id="invoice-builder" class="hidden">
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-semibold text-white">Create/Edit Invoice</h3>
+                        <button onclick="loadInvoicesTable()" 
+                                class="text-gray-400 hover:text-white">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <!-- Invoice Builder Content will be loaded from invoices.js -->
+                    <div id="invoice-builder-content">
+                        <!-- This will be populated by showInvoiceBuilder() function -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoices List -->
+            <div id="invoices-list">
+                <div class="bg-gray-800 rounded-lg border border-gray-700">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-semibold text-white">All Invoices</h3>
+                            <div class="flex space-x-3">
+                                <input type="text" id="invoice-search" placeholder="Search invoices..." 
+                                       class="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white placeholder-gray-400">
+                                <select id="invoice-status-filter" 
+                                        class="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                                    <option value="">All Statuses</option>
+                                    <option value="Draft">Draft</option>
+                                    <option value="Sent">Sent</option>
+                                    <option value="Paid">Paid</option>
+                                    <option value="Overdue">Overdue</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-700">
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Invoice #</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Client</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Issue Date</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Due Date</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Amount</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoices-table" class="divide-y divide-gray-700">
+                                    <!-- Invoice rows will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Invoice Pagination Controls -->
+                        <div id="invoices-pagination" class="flex items-center justify-between py-6">
+                            <div class="text-sm text-gray-400">
+                                <span id="invoices-info">Showing 0 of 0 invoices</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button id="invoices-prev-btn" onclick="previousInvoicesPage()" 
+                                        class="px-3 py-2 text-sm text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded border border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i class="fas fa-chevron-left mr-1"></i>Previous
+                                </button>
+                                <div id="invoices-pages" class="flex space-x-1">
+                                    <!-- Page numbers will be generated here -->
+                                </div>
+                                <button id="invoices-next-btn" onclick="nextInvoicesPage()" 
+                                        class="px-3 py-2 text-sm text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded border border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    Next<i class="fas fa-chevron-right ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="page-settings" class="page-content hidden">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-white mb-2">
+                    <i class="fas fa-cog mr-3"></i>Settings
+                </h2>
+                <p class="text-gray-400">Configure application settings and currency rates</p>
+            </div>
+
+            <!-- Current Template Selection -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-8">
+                <h3 class="text-xl font-semibold text-white mb-6">Current Template Selection</h3>
+                <p class="text-gray-400 text-sm mb-4">Select which company template to use by default for new quotations and invoices</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Active Template</label>
+                        <select id="current-template-selector"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                            <option value="">No template selected</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">This template will be used by default for new documents</p>
+                    </div>
+                    <div id="current-template-info" class="hidden">
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Template Details</label>
+                        <div class="bg-gray-700 p-3 rounded-lg">
+                            <div id="current-template-company-name" class="font-medium text-white"></div>
+                            <div id="current-template-details" class="text-sm text-gray-400 mt-1"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <button id="save-current-template" 
+                            class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-save mr-2"></i>Save Template Selection
+                    </button>
+                </div>
+            </div>
+
+
+
+            <!-- Company Templates -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-xl font-semibold text-white">Company Templates</h3>
+                        <p class="text-gray-400 text-sm mt-1">Manage company templates for quotations and invoices</p>
+                    </div>
+                    <button onclick="showTemplateForm()" 
+                            class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Template
+                    </button>
+                </div>
+
+                <!-- Templates Table -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="border-b border-gray-700">
+                                <th class="text-left py-3 px-4 font-medium text-gray-400">Template Name</th>
+                                <th class="text-left py-3 px-4 font-medium text-gray-400">Company</th>
+                                <th class="text-left py-3 px-4 font-medium text-gray-400">Currency</th>
+                                <th class="text-left py-3 px-4 font-medium text-gray-400">Default</th>
+                                <th class="text-left py-3 px-4 font-medium text-gray-400">Status</th>
+                                <th class="text-right py-3 px-4 font-medium text-gray-400">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="templates-table">
+                            <!-- Templates will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Currency Rates -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-semibold text-white">Currency Rates</h3>
+                    <button onclick="showCurrencyRateForm()" 
+                            class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Rate
+                    </button>
+                </div>
+
+                <!-- Currency Rate Form -->
+                <div id="currency-rate-form" class="hidden mb-6 p-4 bg-gray-700 rounded-lg">
+                    <form id="currency-rate-form-element">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">From Currency</label>
+                                <select id="from-currency" required
+                                        class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                                    <option value="USD">USD</option>
+                                    <option value="AED">AED</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="GBP">GBP</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">To Currency</label>
+                                <select id="to-currency" required
+                                        class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                                    <option value="PKR">PKR</option>
+                                    <option value="USD">USD</option>
+                                    <option value="AED">AED</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Exchange Rate</label>
+                                <input type="number" id="exchange-rate" step="0.01" min="0" required
+                                       class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Actions</label>
+                                <div class="flex space-x-2">
+                                    <button type="submit" 
+                                            class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors">
+                                        <i class="fas fa-save"></i>
+                                    </button>
+                                    <button type="button" onclick="hideCurrencyRateForm()" 
+                                            class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg transition-colors">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Notes</label>
+                            <input type="text" id="rate-notes"
+                                   class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                   placeholder="Optional notes about this exchange rate">
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Currency Rates Table -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-700">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">From</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">To</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Rate</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Notes</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="currency-rates-table" class="bg-gray-800 divide-y divide-gray-700">
+                            <!-- Currency rates will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Application Settings (Legacy/Fallback) -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-8">
+                <h3 class="text-xl font-semibold text-white mb-6">Application Settings</h3>
+                <p class="text-gray-400 text-sm mb-4">Legacy settings - most values are now managed through Company Templates above</p>
+                <form id="settings-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Default Currency</label>
+                            <select id="settings-default-currency"
+                                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                                <option value="PKR">PKR</option>
+                                <option value="USD">USD</option>
+                                <option value="AED">AED</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Base Currency</label>
+                            <select id="settings-base-currency"
+                                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                                <option value="PKR">PKR</option>
+                                <option value="USD">USD</option>
+                                <option value="AED">AED</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Default Tax Rate %</label>
+                            <input type="number" id="settings-tax-rate" step="0.01" min="0" max="100"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Default Discount Type</label>
+                            <select id="settings-discount-type"
+                                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                                <option value="None">None</option>
+                                <option value="Percent">Percent</option>
+                                <option value="Amount">Amount</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Default Discount Value</label>
+                            <input type="number" id="settings-discount-value" step="0.01" min="0"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Default Header Buffer %</label>
+                            <input type="number" id="settings-header-buffer" step="0.01" min="0"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                        </div>
+                    </div>
+                    
+                    <!-- Terms and Notes Section -->
+                    <div class="mt-8">
+                        <h4 class="text-lg font-semibold text-white mb-4">Default Terms & Notes</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Quotation Terms</label>
+                                <textarea id="settings-quotation-terms" rows="6"
+                                          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                          placeholder="Default terms and conditions for quotations..."></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Invoice Terms</label>
+                                <textarea id="settings-invoice-terms" rows="6"
+                                          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                          placeholder="Default terms and conditions for invoices..."></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Default Quotation Notes</label>
+                                <textarea id="settings-quotation-notes" rows="4"
+                                          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                          placeholder="Default notes for quotations..."></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Default Invoice Notes</label>
+                                <textarea id="settings-invoice-notes" rows="4"
+                                          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                          placeholder="Default notes for invoices..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <button type="submit" 
+                                class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-save mr-2"></i>Save Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Company Template Form Modal -->
+    <div id="template-form-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-700">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-semibold text-white" id="template-form-title">Add Company Template</h3>
+                    <button onclick="closeTemplateForm()" 
+                            class="text-gray-400 hover:text-gray-300">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
+            <form id="template-form" class="p-6">
+                <input type="hidden" id="template-id">
+                
+                <!-- Basic Information -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="md:col-span-2">
+                        <h4 class="text-lg font-medium text-white mb-4">Template Information</h4>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Template Name *</label>
+                        <input type="text" id="template-name" required
+                               placeholder="e.g., Company A - 30 Day Terms"
+                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="template-default" 
+                                   class="w-4 h-4 text-primary-600 bg-gray-700 border-gray-600 rounded focus:ring-primary-500">
+                            <span class="ml-2 text-sm text-gray-400">Set as default template</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Company Information -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="md:col-span-2">
+                        <h4 class="text-lg font-medium text-white mb-4">Company Information</h4>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Company Name *</label>
+                        <input type="text" id="template-company-name" required
+                               placeholder="Production Services Ltd"
+                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Company Phone</label>
+                        <input type="tel" id="template-company-phone"
+                               placeholder="+92-300-1234567"
+                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Company Email</label>
+                        <input type="email" id="template-company-email"
+                               placeholder="info@company.com"
+                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Logo Path</label>
+                        <input type="text" id="template-company-logo"
+                               placeholder="/assets/company-logo.png"
+                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Company Address</label>
+                        <textarea id="template-company-address" rows="3"
+                                  placeholder="123 Business District, Karachi, Pakistan"
+                                  class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"></textarea>
+                    </div>
+                </div>
+
+                <!-- Financial Settings -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="md:col-span-3">
+                        <h4 class="text-lg font-medium text-white mb-4">Financial Settings</h4>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Default Currency</label>
+                        <select id="template-currency"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                            <option value="PKR">PKR</option>
+                            <option value="USD">USD</option>
+                            <option value="AED">AED</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Tax Rate (%)</label>
+                        <input type="number" id="template-tax-rate" step="0.01" min="0" max="100"
+                               placeholder="9.00"
+                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Header Buffer (%)</label>
+                        <input type="number" id="template-header-buffer" step="0.01" min="0"
+                               placeholder="15.00"
+                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Discount Type</label>
+                        <select id="template-discount-type"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                            <option value="None">None</option>
+                            <option value="Percent">Percentage</option>
+                            <option value="Amount">Fixed Amount</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Discount Value</label>
+                        <input type="number" id="template-discount-value" step="0.01" min="0"
+                               placeholder="0.00"
+                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                    </div>
+                </div>
+
+                <!-- Terms and Notes -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="md:col-span-2">
+                        <h4 class="text-lg font-medium text-white mb-4">Terms & Notes</h4>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Quotation Terms</label>
+                        <textarea id="template-quotation-terms" rows="6"
+                                  placeholder="Terms and conditions for quotations..."
+                                  class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Invoice Terms</label>
+                        <textarea id="template-invoice-terms" rows="6"
+                                  placeholder="Payment terms for invoices..."
+                                  class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Quotation Notes</label>
+                        <textarea id="template-quotation-notes" rows="4"
+                                  placeholder="Default notes for quotations..."
+                                  class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Invoice Notes</label>
+                        <textarea id="template-invoice-notes" rows="4"
+                                  placeholder="Default notes for invoices..."
+                                  class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"></textarea>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-4 pt-6 border-t border-gray-700">
+                    <button type="button" onclick="closeTemplateForm()" 
+                            class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors">
+                        <i class="fas fa-save mr-2"></i>Save Template
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <!-- File Input for Imports -->
+    <input type="file" id="excel-import" accept=".xlsx,.xls" class="hidden">
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center">
+        <div class="bg-gray-800 rounded-lg p-8 shadow-xl">
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+                <p class="text-gray-400">Processing...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load utility modules first -->
+    <script src="js/utils.js"></script>
+    
+    <!-- Load feature modules -->
+    <script src="js/services.js"></script>
+    <script src="js/bundles.js"></script>
+    <script src="js/customers.js"></script>
+    <script src="js/invoices.js"></script>
+<script src="js/quotations.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/excel.js"></script>
+    <script src="js/excel-globals.js"></script>
+    <script src="js/pdf.js"></script>
+    <script src="js/pdf-globals.js"></script>
+    
+    <!-- Template Change Modal -->
+    <div id="change-template-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full">
+            <div class="p-6 border-b border-gray-700">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-semibold text-white">Change Current Template</h3>
+                    <button onclick="hideChangeTemplateModal()" 
+                            class="text-gray-400 hover:text-gray-300">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Select Template</label>
+                    <select id="modal-template-selector" 
+                            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                            onchange="updateModalTemplateInfo()">
+                        <option value="">Select a template...</option>
+                    </select>
+                </div>
+                <div id="modal-template-info" class="hidden bg-gray-700 p-4 rounded-lg mb-6">
+                    <div id="modal-template-company-name" class="font-medium text-white mb-2"></div>
+                    <div id="modal-template-details" class="text-sm text-gray-400"></div>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button onclick="hideChangeTemplateModal()" 
+                            class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                    <button onclick="saveTemplateChange()" 
+                            class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-save mr-2"></i>Save Template
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Load main app last -->
+    <script src="js/app.js"></script>
+</body>
+</html>

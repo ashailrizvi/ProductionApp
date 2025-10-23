@@ -1,0 +1,34 @@
+[
+  {
+    "id": "aed-pkr",
+    "fromCur": "AED",
+    "toCur": "PKR",
+    "rate": 76,
+    "notes": "AED to PKR exchange rate",
+    "created_at": 1760559617793,
+    "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+    "gs_table_name": "currency_rates",
+    "updated_at": 1760559617793,
+    "_rid": "pBtjAL8RWCeigiUAAAAAAA==",
+    "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCeigiUAAAAAAA==/",
+    "_etag": "\"ba03eed8-0000-0800-0000-68f002010000\"",
+    "_attachments": "attachments/",
+    "_ts": 1760559617
+  },
+  {
+    "id": "usd-pkr",
+    "fromCur": "USD",
+    "toCur": "PKR",
+    "rate": 280,
+    "notes": "USD to PKR exchange rate",
+    "created_at": 1760559617793,
+    "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+    "gs_table_name": "currency_rates",
+    "updated_at": 1760559617793,
+    "_rid": "pBtjAL8RWCehgiUAAAAAAA==",
+    "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCehgiUAAAAAAA==/",
+    "_etag": "\"ba03edd8-0000-0800-0000-68f002010000\"",
+    "_attachments": "attachments/",
+    "_ts": 1760559617
+  }
+]

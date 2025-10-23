@@ -1,0 +1,24 @@
+[
+  {
+    "id": "1",
+    "defaultCurrency": "PKR",
+    "baseCurrency": "PKR",
+    "taxRate": 0.15,
+    "discountType": "None",
+    "discountValue": 0,
+    "headerBuffer": 0.5,
+    "quotationTerms": "1. This quotation is valid for 30 days from the date of issue.\n2. All rates are exclusive of applicable taxes unless stated otherwise.\n3. 50% advance payment required to commence work.\n4. Final payment due within 15 days of project completion.\n5. Additional revisions beyond scope will be charged separately.\n6. Travel and accommodation costs (if required) will be charged extra.\n7. Client to provide necessary permissions and clearances for shooting.",
+    "invoiceTerms": "1. Payment due within 30 days of invoice date.\n2. All payments to be made by cheque in the name of the company or credited online to the following bank account: \n3. All bank charges to be borne by the client.\n4. Goods remain the property of the company until full payment is received.\n5. Any disputes must be raised within 7 days of invoice receipt.",
+    "quotationNotes": "Thank you for considering our services. We look forward to working with you on this project.",
+    "invoiceNotes": "Thank you for your business. Please remit payment as per the terms mentioned above.",
+    "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+    "gs_table_name": "settings",
+    "created_at": 1760708994501,
+    "updated_at": 1760800570508,
+    "_rid": "pBtjAL8RWCfTVCYAAAAAAA==",
+    "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCfTVCYAAAAAAA==/",
+    "_etag": "\"7904c7dc-0000-0800-0000-68f3af3a0000\"",
+    "_attachments": "attachments/",
+    "_ts": 1760800570
+  }
+]

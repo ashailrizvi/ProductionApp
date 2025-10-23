@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Service Edit Fix</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">🔧 Service Edit Fix Test</h1>
+        
+        <div class="bg-green-800 p-4 rounded mb-6">
+            <h3 class="font-bold text-green-200 mb-2">✅ Fix Applied</h3>
+            <p class="text-green-100 text-sm">
+                Added <code>initializeServiceFormListener()</code> call to <code>editService()</code> function 
+                to ensure form submission handler is attached when editing services.
+            </p>
+        </div>
+        
+        <div class="bg-blue-800 p-4 rounded mb-6">
+            <h3 class="font-bold text-blue-200 mb-2">🧪 Test Instructions</h3>
+            <ol class="list-decimal list-inside space-y-1 text-blue-100 text-sm">
+                <li>Navigate to <strong>Services</strong> page in iframe below</li>
+                <li>Click the <strong>Edit</strong> button (✏️) for any service</li>
+                <li>Make changes to any field (e.g., change the service name)</li>
+                <li>Click <strong>Save Service</strong> button</li>
+                <li>Verify the changes are saved and reflected in the services table</li>
+            </ol>
+        </div>
+
+        <div class="bg-gray-800 p-4 rounded mb-6">
+            <h3 class="font-semibold mb-4">Quick Test Controls</h3>
+            <div class="space-y-2">
+                <button id="go-to-services" class="bg-blue-500 px-4 py-2 rounded mr-2">
+                    🔧 Go to Services Page
+                </button>
+                <button id="check-form-listener" class="bg-green-500 px-4 py-2 rounded mr-2">
+                    📋 Check Form Listener
+                </button>
+                <button id="simulate-edit" class="bg-purple-500 px-4 py-2 rounded mr-2">
+                    ✏️ Simulate Edit Test
+                </button>
+            </div>
+        </div>
+        
+        <div id="results" class="bg-gray-800 p-4 rounded mb-6 text-sm max-h-64 overflow-y-auto"></div>
+
+        <iframe id="app" src="index.html" width="100%" height="600" class="border border-gray-600 rounded"></iframe>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            const colors = {
+                info: 'text-blue-300',
+                success: 'text-green-300',
+                error: 'text-red-300',
+                warning: 'text-yellow-300'
+            };
+            div.className = colors[type] || colors.info;
+            div.innerHTML = `<span class="text-gray-400">[${new Date().toLocaleTimeString()}]</span> ${message}`;
+            document.getElementById('results').appendChild(div);
+            document.getElementById('results').scrollTop = document.getElementById('results').scrollHeight;
+        }
+        
+        function getApp() {
+            return document.getElementById('app').contentWindow;
+        }
+        
+        async function goToServices() {
+            try {
+                log('🔧 Navigating to services page...', 'info');
+                const app = getApp();
+                
+                app.showPage('services');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                log('✅ Navigated to services page', 'success');
+                
+                // Count edit buttons
+                const editButtons = app.document.querySelectorAll('button[onclick*="editService"]');
+                log(`🔍 Found ${editButtons.length} edit buttons`, 'info');
+                
+            } catch (error) {
+                log(`❌ Error navigating: ${error.message}`, 'error');
+            }
+        }
+        
+        function checkFormListener() {
+            try {
+                log('📋 Checking service form listener setup...', 'warning');
+                const app = getApp();
+                
+                // Check if functions exist
+                const functions = {
+                    editService: typeof app.editService,
+                    initializeServiceFormListener: typeof app.initializeServiceFormListener,
+                    showServiceForm: typeof app.showServiceForm
+                };
+                
+                log('🔧 Function Availability:', 'info');
+                Object.entries(functions).forEach(([name, type]) => {
+                    const status = type === 'function' ? '✅' : '❌';
+                    log(`   ${name}: ${status} ${type}`, type === 'function' ? 'success' : 'error');
+                });
+                
+                // Check form elements
+                const serviceForm = app.document.getElementById('service-form-element');
+                const serviceFormDiv = app.document.getElementById('service-form');
+                
+                log('📋 Form Elements:', 'info');
+                log(`   service-form-element: ${serviceForm ? '✅' : '❌'}`, serviceForm ? 'success' : 'error');
+                log(`   service-form container: ${serviceFormDiv ? '✅' : '❌'}`, serviceFormDiv ? 'success' : 'error');
+                
+                if (serviceForm) {
+                    const hasListener = serviceForm.hasAttribute('data-listener-added');
+                    log(`   Form has listener: ${hasListener ? '✅' : '❌'}`, hasListener ? 'success' : 'warning');
+                }
+                
+                // Check key form fields
+                const fields = ['service-code', 'service-name', 'service-category'];
+                fields.forEach(fieldId => {
+                    const field = app.document.getElementById(fieldId);
+                    log(`   ${fieldId}: ${field ? '✅' : '❌'}`, field ? 'success' : 'error');
+                });
+                
+            } catch (error) {
+                log(`❌ Error checking form: ${error.message}`, 'error');
+            }
+        }
+        
+        async function simulateEditTest() {
+            try {
+                log('✏️ Simulating service edit test...', 'warning');
+                const app = getApp();
+                
+                // Navigate to services if not already there
+                app.showPage('services');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Look for services table and edit buttons
+                const editButtons = app.document.querySelectorAll('button[onclick*="editService"]');
+                
+                if (editButtons.length === 0) {
+                    log('❌ No edit buttons found - no services to edit', 'error');
+                    return;
+                }
+                
+                log(`🎯 Found ${editButtons.length} services to test with`, 'info');
+                
+                // Click first edit button
+                const firstEditBtn = editButtons[0];
+                const onclickValue = firstEditBtn.getAttribute('onclick');
+                const serviceIdMatch = onclickValue.match(/editService\('([^']+)'\)/);
+                const serviceId = serviceIdMatch ? serviceIdMatch[1] : 'unknown';
+                
+                log(`🖱️ Clicking edit button for service: ${serviceId}`, 'info');
+                firstEditBtn.click();
+                
+                // Wait for form to appear
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Check if form appeared
+                const serviceForm = app.document.getElementById('service-form');
+                const isFormVisible = serviceForm && !serviceForm.classList.contains('hidden');
+                
+                log(`📋 Form visibility: ${isFormVisible ? 'VISIBLE ✅' : 'HIDDEN ❌'}`, isFormVisible ? 'success' : 'error');
+                
+                if (isFormVisible) {
+                    // Check if form has listener
+                    const formElement = app.document.getElementById('service-form-element');
+                    const hasListener = formElement && formElement.hasAttribute('data-listener-added');
+                    
+                    log(`👂 Form listener attached: ${hasListener ? 'YES ✅' : 'NO ❌'}`, hasListener ? 'success' : 'error');
+                    
+                    // Check if form is populated
+                    const serviceNameField = app.document.getElementById('service-name');
+                    const serviceName = serviceNameField ? serviceNameField.value : '';
+                    
+                    log(`📝 Form populated with: "${serviceName}"`, serviceName ? 'success' : 'warning');
+                    
+                    if (serviceName) {
+                        log('🎉 SUCCESS: Edit form is working correctly!', 'success');
+                        log('💡 Now you can manually test changing values and clicking Save', 'info');
+                    } else {
+                        log('⚠️ Form opened but no data loaded', 'warning');
+                    }
+                    
+                    // Close form after test
+                    setTimeout(() => {
+                        const closeBtn = app.document.querySelector('#service-form button[onclick="hideServiceForm()"]');
+                        if (closeBtn) {
+                            closeBtn.click();
+                            log('🚪 Form closed after test', 'info');
+                        }
+                    }, 3000);
+                    
+                } else {
+                    log('❌ Form did not appear - edit function may not be working', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Error in simulation: ${error.message}`, 'error');
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('go-to-services').addEventListener('click', goToServices);
+        document.getElementById('check-form-listener').addEventListener('click', checkFormListener);
+        document.getElementById('simulate-edit').addEventListener('click', simulateEditTest);
+        
+        // Auto-run when app loads
+        document.getElementById('app').addEventListener('load', function() {
+            setTimeout(() => {
+                log('🚀 App loaded, ready for service edit testing...', 'success');
+                checkFormListener();
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

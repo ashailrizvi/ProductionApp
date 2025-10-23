@@ -1,0 +1,2253 @@
+{
+  "export_metadata": {
+    "timestamp": "2025-10-22T11:29:23.643Z",
+    "exported_by": "Database Export Tool",
+    "format_version": "1.0",
+    "export_type": "complete"
+  },
+  "tables": {
+    "services": {
+      "data": [
+        {
+          "serviceCode": "SRV-SCRIPT-PROJ",
+          "name": "Scriptwriting",
+          "category": "Pre-Production",
+          "unit": "per project",
+          "baseRate": 12000,
+          "currency": "PKR",
+          "minQty": 1,
+          "maxQty": null,
+          "isOptional": true,
+          "isNegotiable": false,
+          "contentTypes": "All",
+          "teamRoles": "Scriptwriter",
+          "includes": "",
+          "notes": "",
+          "id": "mgz087goh63y9cqa1hq",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "services",
+          "created_at": 1760956828224,
+          "updated_at": 1760962931322,
+          "_rid": "pBtjAL8RWCfTticAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCfTticAAAAAAA==/",
+          "_etag": "\"e20496a8-0000-0800-0000-68f629730000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760962931
+        },
+        {
+          "serviceCode": "SRV-CATER-DAY",
+          "name": "Catering 12 Hr. Shift",
+          "category": "Logistics",
+          "unit": "per day",
+          "baseRate": 2000,
+          "currency": "PKR",
+          "minQty": 1,
+          "maxQty": null,
+          "isOptional": true,
+          "isNegotiable": false,
+          "contentTypes": "All",
+          "teamRoles": "Catering",
+          "includes": "Meals for crew",
+          "notes": "Full day catering service",
+          "id": "srv-cater-day",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "services",
+          "created_at": 1760559633087,
+          "updated_at": 1760962660636,
+          "_rid": "pBtjAL8RWCeygiUAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCeygiUAAAAAAA==/",
+          "_etag": "\"e2048067-0000-0800-0000-68f628640000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760962660
+        },
+        {
+          "id": "rtl-drone",
+          "serviceCode": "RTL-DRONE",
+          "name": "Drone Rental",
+          "category": "Equipment",
+          "unit": "per day",
+          "baseRate": 60000,
+          "currency": "PKR",
+          "contentTypes": "Aerial",
+          "teamRoles": "Drone Operator",
+          "isOptional": true,
+          "isNegotiable": false,
+          "minQty": 1,
+          "maxQty": 5,
+          "includes": "Drone with operator",
+          "notes": "DJI drone package",
+          "created_at": 1760559633087,
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "services",
+          "updated_at": 1760559633087,
+          "_rid": "pBtjAL8RWCexgiUAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCexgiUAAAAAAA==/",
+          "_etag": "\"ba036cdc-0000-0800-0000-68f002110000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760559633
+        },
+        {
+          "id": "rtl-cam-snyfx3",
+          "serviceCode": "RTL-CAM-SNYFX3",
+          "name": "Sony FX3 Camera",
+          "category": "Equipment",
+          "unit": "per day",
+          "baseRate": 30000,
+          "currency": "PKR",
+          "contentTypes": "Video",
+          "teamRoles": "Camera Operator",
+          "isOptional": true,
+          "isNegotiable": false,
+          "minQty": 1,
+          "maxQty": 3,
+          "includes": "Camera body with basic kit",
+          "notes": "Professional camera rental",
+          "created_at": 1760559633087,
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "services",
+          "updated_at": 1760559633087,
+          "_rid": "pBtjAL8RWCewgiUAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCewgiUAAAAAAA==/",
+          "_etag": "\"ba036bdc-0000-0800-0000-68f002110000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760559633
+        },
+        {
+          "id": "rtl-light-pkg",
+          "serviceCode": "RTL-LIGHT-PKG",
+          "name": "Lighting Package",
+          "category": "Equipment",
+          "unit": "per day",
+          "baseRate": 250000,
+          "currency": "PKR",
+          "contentTypes": "Video",
+          "teamRoles": "Gaffer",
+          "isOptional": true,
+          "isNegotiable": true,
+          "minQty": 1,
+          "maxQty": 2,
+          "includes": "Complete lighting setup",
+          "notes": "Professional lighting kit",
+          "created_at": 1760559633087,
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "services",
+          "updated_at": 1760559633087,
+          "_rid": "pBtjAL8RWCevgiUAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCevgiUAAAAAAA==/",
+          "_etag": "\"ba036adc-0000-0800-0000-68f002110000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760559633
+        },
+        {
+          "id": "srv-mua-day",
+          "serviceCode": "SRV-MUA-DAY",
+          "name": "Makeup Artist - Day Rate",
+          "category": "Crew",
+          "unit": "per day",
+          "baseRate": 200000,
+          "currency": "PKR",
+          "contentTypes": "Commercial, Fashion",
+          "teamRoles": "Makeup Artist",
+          "isOptional": true,
+          "isNegotiable": true,
+          "minQty": 1,
+          "maxQty": 3,
+          "includes": "Professional makeup services",
+          "notes": "Senior makeup artist",
+          "created_at": 1760559633087,
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "services",
+          "updated_at": 1760559633087,
+          "_rid": "pBtjAL8RWCeugiUAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCeugiUAAAAAAA==/",
+          "_etag": "\"ba0368dc-0000-0800-0000-68f002110000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760559633
+        },
+        {
+          "id": "srv-vid-day",
+          "serviceCode": "SRV-VID-DAY",
+          "name": "Videography - Full Crew Day",
+          "category": "Production",
+          "unit": "10-hr day",
+          "baseRate": 120000,
+          "currency": "PKR",
+          "contentTypes": "Commercial, Corporate",
+          "teamRoles": "Director, Camera, Audio",
+          "isOptional": false,
+          "isNegotiable": true,
+          "minQty": 1,
+          "maxQty": 10,
+          "includes": "Full crew for 10 hours",
+          "notes": "Standard videography package",
+          "created_at": 1760559633087,
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "services",
+          "updated_at": 1760559633087,
+          "_rid": "pBtjAL8RWCetgiUAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCetgiUAAAAAAA==/",
+          "_etag": "\"ba0369dc-0000-0800-0000-68f002110000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760559633
+        },
+        {
+          "id": "srv-del-reel",
+          "serviceCode": "SRV-DEL-REEL",
+          "name": "Deliverable - Instagram Reel",
+          "category": "Post-Production",
+          "unit": "per reel",
+          "baseRate": null,
+          "currency": "PKR",
+          "contentTypes": "Social Media",
+          "teamRoles": "Editor",
+          "isOptional": true,
+          "isNegotiable": true,
+          "minQty": 1,
+          "maxQty": 50,
+          "includes": "Edited Instagram reel",
+          "notes": "Rate to be determined",
+          "created_at": 1760559633087,
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "services",
+          "updated_at": 1760559633087,
+          "_rid": "pBtjAL8RWCesgiUAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCesgiUAAAAAAA==/",
+          "_etag": "\"ba0367dc-0000-0800-0000-68f002110000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760559633
+        },
+        {
+          "id": "rtl-lens-gm",
+          "serviceCode": "RTL-LENS-GM",
+          "name": "Sony G Master Lens",
+          "category": "Equipment",
+          "unit": "per day",
+          "baseRate": 50000,
+          "currency": "PKR",
+          "contentTypes": "Video",
+          "teamRoles": "Camera Operator",
+          "isOptional": true,
+          "isNegotiable": false,
+          "minQty": 1,
+          "maxQty": 5,
+          "includes": "Professional lens",
+          "notes": "G Master series lens",
+          "created_at": 1760559633087,
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "services",
+          "updated_at": 1760559633087,
+          "_rid": "pBtjAL8RWCergiUAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCergiUAAAAAAA==/",
+          "_etag": "\"ba0366dc-0000-0800-0000-68f002110000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760559633
+        }
+      ],
+      "count": 9,
+      "total_available": 9,
+      "table": "services",
+      "schema": {
+        "name": "services",
+        "fields": [
+          {
+            "name": "id",
+            "type": "text",
+            "description": "Unique identifier",
+            "options": null
+          },
+          {
+            "name": "serviceCode",
+            "type": "text",
+            "description": "Unique service code (SRV-*, RTL-*)",
+            "options": null
+          },
+          {
+            "name": "name",
+            "type": "text",
+            "description": "Service name",
+            "options": null
+          },
+          {
+            "name": "category",
+            "type": "text",
+            "description": "Service category",
+            "options": null
+          },
+          {
+            "name": "unit",
+            "type": "text",
+            "description": "Unit of measurement",
+            "options": null
+          },
+          {
+            "name": "baseRate",
+            "type": "number",
+            "description": "Base rate (nullable for TBD rates)",
+            "options": null
+          },
+          {
+            "name": "currency",
+            "type": "text",
+            "description": "Currency code",
+            "options": null
+          },
+          {
+            "name": "contentTypes",
+            "type": "text",
+            "description": "Content types applicable",
+            "options": null
+          },
+          {
+            "name": "teamRoles",
+            "type": "text",
+            "description": "Team roles required",
+            "options": null
+          },
+          {
+            "name": "isOptional",
+            "type": "bool",
+            "description": "Is this service optional",
+            "options": null
+          },
+          {
+            "name": "isNegotiable",
+            "type": "bool",
+            "description": "Is the rate negotiable",
+            "options": null
+          },
+          {
+            "name": "minQty",
+            "type": "number",
+            "description": "Minimum quantity",
+            "options": null
+          },
+          {
+            "name": "maxQty",
+            "type": "number",
+            "description": "Maximum quantity",
+            "options": null
+          },
+          {
+            "name": "includes",
+            "type": "text",
+            "description": "What the service includes",
+            "options": null
+          },
+          {
+            "name": "notes",
+            "type": "text",
+            "description": "Additional notes",
+            "options": null
+          }
+        ]
+      },
+      "response_format": "wrapper",
+      "exported_at": "2025-10-22T11:29:26.426Z",
+      "description": "Service catalog with rates and categories"
+    },
+    "bundles": {
+      "data": [
+        {
+          "bundleCode": "BNDL-DVC-IND-1D",
+          "name": "DVC Indoor Shoot – 1 Day",
+          "parentServiceId": null,
+          "description": "Studio/indoor setup",
+          "id": "b6407bce-74d9-4934-a367-5214348c00ad",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "bundles",
+          "created_at": 1760712565858,
+          "updated_at": 1760807716320,
+          "_rid": "pBtjAL8RWCf3WyYAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCf3WyYAAAAAAA==/",
+          "_etag": "\"7e04e11b-0000-0800-0000-68f3cb240000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760807716
+        },
+        {
+          "bundleCode": "BNDL-EVENT-1DAY",
+          "name": "Event Shoot – 1 Day",
+          "parentServiceId": null,
+          "description": "",
+          "id": "58132a15-c809-4d9c-b7d1-bb290da19b04",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "bundles",
+          "created_at": 1760712563149,
+          "updated_at": 1760712563149,
+          "_rid": "pBtjAL8RWCf1WyYAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCf1WyYAAAAAAA==/",
+          "_etag": "\"4304ccb0-0000-0800-0000-68f257730000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760712563
+        },
+        {
+          "bundleCode": "BNDL-POST-STD",
+          "name": "Post-Production – Standard",
+          "parentServiceId": null,
+          "description": "",
+          "id": "64c8fb7a-f32b-4f2b-8a31-74a3ced470f5",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "bundles",
+          "created_at": 1760712562166,
+          "updated_at": 1760712562166,
+          "_rid": "pBtjAL8RWCfzWyYAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCfzWyYAAAAAAA==/",
+          "_etag": "\"4304a6b0-0000-0800-0000-68f257720000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760712562
+        },
+        {
+          "bundleCode": "BNDL-REEL-EDIT",
+          "name": "Instagram Reel – Edit Only",
+          "parentServiceId": null,
+          "description": "",
+          "id": "1383f8b3-cbce-4bdd-ab31-f5897e54a3cc",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "bundles",
+          "created_at": 1760712561129,
+          "updated_at": 1760712561129,
+          "_rid": "pBtjAL8RWCfyWyYAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCfyWyYAAAAAAA==/",
+          "_etag": "\"430471b0-0000-0800-0000-68f257710000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760712561
+        },
+        {
+          "bundleCode": "BNDL-REEL-SHOOT",
+          "name": "Instagram Reel – Shoot + Edit",
+          "parentServiceId": null,
+          "description": "Instagram reel shoot and post-production.",
+          "id": "f4e43d79-0658-4b37-9974-9e4df7fdbe0f",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "bundles",
+          "created_at": 1760712560189,
+          "updated_at": 1760717156937,
+          "_rid": "pBtjAL8RWCfxWyYAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCfxWyYAAAAAAA==/",
+          "_etag": "\"4704f714-0000-0800-0000-68f269640000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760717156
+        }
+      ],
+      "count": 5,
+      "total_available": 5,
+      "table": "bundles",
+      "schema": {
+        "name": "bundles",
+        "fields": [
+          {
+            "name": "id",
+            "type": "text",
+            "description": "Unique identifier",
+            "options": null
+          },
+          {
+            "name": "bundleCode",
+            "type": "text",
+            "description": "Bundle code",
+            "options": null
+          },
+          {
+            "name": "name",
+            "type": "text",
+            "description": "Bundle name",
+            "options": null
+          },
+          {
+            "name": "parentServiceId",
+            "type": "text",
+            "description": "Parent service ID reference",
+            "options": null
+          }
+        ]
+      },
+      "response_format": "wrapper",
+      "exported_at": "2025-10-22T11:29:27.430Z",
+      "description": "Service packages and combinations"
+    },
+    "customers": {
+      "data": [
+        {
+          "clientName": "Uniferoz Pvt Ltd.",
+          "contactPerson": "Rida Jilani",
+          "email": "bm.sc@uniferoz.com",
+          "phone": "+92 300 8263355",
+          "address": "32/8, Sector 15, Korangi Industrial Area, Karachi, Pakistan",
+          "city": "Karachi",
+          "country": "Pakistan",
+          "taxId": "",
+          "notes": "Influencer-led campaigns focus",
+          "isActive": true,
+          "id": "cust-003",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "customers",
+          "created_at": 1760707388920,
+          "updated_at": 1760948059645,
+          "_rid": "pBtjAL8RWCfxUCYAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCfxUCYAAAAAAA==/",
+          "_etag": "\"d7043ad1-0000-0800-0000-68f5ef5b0000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760948059
+        },
+        {
+          "clientName": "Astor International",
+          "contactPerson": "Abid Nisar",
+          "email": "info@astor.com.pk",
+          "phone": "+92 321 2150000",
+          "address": "412 Uni Centre, I.I. Chundrigar Road, Karachi, Sindh, Pakistan",
+          "city": "Karachi",
+          "country": "Pakistan",
+          "taxId": "",
+          "notes": "Social Media Retainer",
+          "isActive": true,
+          "id": "cust-002",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "customers",
+          "created_at": 1760707388920,
+          "updated_at": 1760948227400,
+          "_rid": "pBtjAL8RWCfwUCYAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCfwUCYAAAAAAA==/",
+          "_etag": "\"d704a6f8-0000-0800-0000-68f5f0030000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760948227
+        },
+        {
+          "clientName": "Sana Sarah’s Salon",
+          "contactPerson": "Saim Ali",
+          "email": "",
+          "phone": "+92-341 2117078",
+          "address": "",
+          "city": "Karachi",
+          "country": "Pakistan",
+          "taxId": "",
+          "notes": "Social Media Retainer",
+          "isActive": true,
+          "id": "cust-001",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "customers",
+          "created_at": 1760707388920,
+          "updated_at": 1760948452147,
+          "_rid": "pBtjAL8RWCfvUCYAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCfvUCYAAAAAAA==/",
+          "_etag": "\"d8044622-0000-0800-0000-68f5f0e40000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760948452
+        }
+      ],
+      "count": 3,
+      "total_available": 3,
+      "table": "customers",
+      "schema": {
+        "name": "customers",
+        "fields": [
+          {
+            "name": "id",
+            "type": "text",
+            "description": "Unique identifier",
+            "options": null
+          },
+          {
+            "name": "clientName",
+            "type": "text",
+            "description": "Client company name",
+            "options": null
+          },
+          {
+            "name": "contactPerson",
+            "type": "text",
+            "description": "Primary contact person name",
+            "options": null
+          },
+          {
+            "name": "email",
+            "type": "text",
+            "description": "Contact email address",
+            "options": null
+          },
+          {
+            "name": "phone",
+            "type": "text",
+            "description": "Contact phone number",
+            "options": null
+          },
+          {
+            "name": "address",
+            "type": "text",
+            "description": "Client address",
+            "options": null
+          },
+          {
+            "name": "city",
+            "type": "text",
+            "description": "City",
+            "options": null
+          },
+          {
+            "name": "country",
+            "type": "text",
+            "description": "Country",
+            "options": null
+          },
+          {
+            "name": "taxId",
+            "type": "text",
+            "description": "Tax/VAT ID number",
+            "options": null
+          },
+          {
+            "name": "notes",
+            "type": "text",
+            "description": "Additional notes about the client",
+            "options": null
+          },
+          {
+            "name": "isActive",
+            "type": "bool",
+            "description": "Is client active",
+            "options": null
+          }
+        ]
+      },
+      "response_format": "wrapper",
+      "exported_at": "2025-10-22T11:29:28.455Z",
+      "description": "Customer database with contact info"
+    },
+    "quotations": {
+      "data": [
+        {
+          "number": "QUO-202510-92204773",
+          "clientName": "Astor International",
+          "contactPerson": "Abid Nisar",
+          "projectTitle": "",
+          "currency": "PKR",
+          "issueDate": "2025-10-21",
+          "validUntil": "2025-11-20",
+          "status": "Current",
+          "templateId": "2651f4ce-1c6f-438f-92c5-28c147f1e8c7",
+          "headerBuffer": 0.5,
+          "taxRate": 0.15,
+          "discountType": "None",
+          "discountValue": 0,
+          "clientAddress": "412 Uni Centre, I.I. Chundrigar Road, Karachi, Sindh, Pakistan",
+          "notes": "Thank you for considering our services. We look forward to working with you on this project.",
+          "subtotal": 480000,
+          "taxAmount": 108000,
+          "discountAmount": 0,
+          "grandTotal": 828000,
+          "version": 1,
+          "parentQuoteId": null,
+          "parentQuoteNumber": null,
+          "invoiceGenerated": false,
+          "id": "5f3d7816-83ab-48c2-9ef6-05d1a15add06",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "quotations",
+          "created_at": 1761037502119,
+          "updated_at": 1761037502119,
+          "_rid": "pBtjAL8RWCdo+ycAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCdo+ycAAAAAAA==/",
+          "_etag": "\"1c052ab0-0000-0800-0000-68f74cbe0000\"",
+          "_attachments": "attachments/",
+          "_ts": 1761037502
+        },
+        {
+          "number": "QUO-202510-30852951",
+          "clientName": "Sana Sarah’s Salon",
+          "contactPerson": "Saim Ali",
+          "projectTitle": "Photoshoot",
+          "currency": "PKR",
+          "issueDate": "2025-10-21",
+          "validUntil": "2025-11-20",
+          "status": "Current",
+          "templateId": "2651f4ce-1c6f-438f-92c5-28c147f1e8c7",
+          "headerBuffer": 0.5,
+          "taxRate": 0.15,
+          "discountType": "None",
+          "discountValue": 0,
+          "clientAddress": "",
+          "notes": "Thank you for considering our services. We look forward to working with you on this project.",
+          "subtotal": 480000,
+          "taxAmount": 108000,
+          "discountAmount": 0,
+          "grandTotal": 828000,
+          "version": 1,
+          "parentQuoteId": null,
+          "parentQuoteNumber": null,
+          "invoiceGenerated": true,
+          "id": "0c9d3acd-c327-4541-8a79-ca57e8d08e4e",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "quotations",
+          "created_at": 1761035983102,
+          "updated_at": 1761036110760,
+          "_rid": "pBtjAL8RWCc89ycAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCc89ycAAAAAAA==/",
+          "_etag": "\"1b0504d6-0000-0800-0000-68f7474e0000\"",
+          "_attachments": "attachments/",
+          "_ts": 1761036110
+        },
+        {
+          "number": "QUO-202510-46914412",
+          "clientName": "Uniferoz Pvt Ltd.",
+          "contactPerson": "Rida Jilani",
+          "projectTitle": "",
+          "currency": "PKR",
+          "issueDate": "2025-10-20",
+          "validUntil": "2025-11-19",
+          "status": "Current",
+          "templateId": "2651f4ce-1c6f-438f-92c5-28c147f1e8c7",
+          "headerBuffer": 0.5,
+          "taxRate": 0.15,
+          "discountType": "None",
+          "discountValue": 0,
+          "clientAddress": "32/8, Sector 15, Korangi Industrial Area, Karachi, Pakistan",
+          "notes": "Thank you for considering our services. We look forward to working with you on this project.",
+          "subtotal": 450000,
+          "taxAmount": 101250,
+          "discountAmount": 0,
+          "grandTotal": 776250,
+          "version": 2,
+          "parentQuoteId": "40ea384f-2dfd-48ed-a72d-0a5ed0d09c98",
+          "parentQuoteNumber": "QUO-202510-46914411",
+          "invoiceGenerated": true,
+          "id": "e4e61c48-31ac-400b-b7b2-e18f933c9d72",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "quotations",
+          "created_at": 1760948661396,
+          "updated_at": 1760948865245,
+          "_rid": "pBtjAL8RWCcpsicAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCcpsicAAAAAAA==/",
+          "_etag": "\"d804e46d-0000-0800-0000-68f5f2810000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760948865
+        },
+        {
+          "number": "QUO-202510-46914411",
+          "clientName": "Uniferoz Pvt Ltd.",
+          "contactPerson": "Rida Jilani",
+          "projectTitle": "",
+          "currency": "PKR",
+          "issueDate": "2025-10-20",
+          "validUntil": "2025-11-19",
+          "status": "Revised",
+          "templateId": "2651f4ce-1c6f-438f-92c5-28c147f1e8c7",
+          "headerBuffer": 0.5,
+          "taxRate": 0.15,
+          "discountType": "None",
+          "discountValue": 0,
+          "clientAddress": "32/8, Sector 15, Korangi Industrial Area, Karachi, Pakistan",
+          "notes": "Thank you for considering our services. We look forward to working with you on this project.",
+          "subtotal": 480000,
+          "taxAmount": 108000,
+          "discountAmount": 0,
+          "grandTotal": 828000,
+          "version": 1,
+          "parentQuoteId": null,
+          "parentQuoteNumber": null,
+          "invoiceGenerated": false,
+          "id": "40ea384f-2dfd-48ed-a72d-0a5ed0d09c98",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "quotations",
+          "created_at": 1760948575858,
+          "updated_at": 1760948660474,
+          "_rid": "pBtjAL8RWCcbsicAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCcbsicAAAAAAA==/",
+          "_etag": "\"d8041449-0000-0800-0000-68f5f1b40000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760948660
+        }
+      ],
+      "count": 4,
+      "total_available": 4,
+      "table": "quotations",
+      "schema": {
+        "name": "quotations",
+        "fields": [
+          {
+            "name": "id",
+            "type": "text",
+            "description": "Unique identifier",
+            "options": null
+          },
+          {
+            "name": "number",
+            "type": "text",
+            "description": "Quotation number (unique)",
+            "options": null
+          },
+          {
+            "name": "issueDate",
+            "type": "datetime",
+            "description": "Issue date",
+            "options": null
+          },
+          {
+            "name": "validUntil",
+            "type": "datetime",
+            "description": "Quote validity date",
+            "options": null
+          },
+          {
+            "name": "clientId",
+            "type": "text",
+            "description": "Customer ID reference",
+            "options": null
+          },
+          {
+            "name": "clientName",
+            "type": "text",
+            "description": "Client name",
+            "options": null
+          },
+          {
+            "name": "contactPerson",
+            "type": "text",
+            "description": "Contact person",
+            "options": null
+          },
+          {
+            "name": "clientAddress",
+            "type": "text",
+            "description": "Client address",
+            "options": null
+          },
+          {
+            "name": "projectTitle",
+            "type": "text",
+            "description": "Project title/description",
+            "options": null
+          },
+          {
+            "name": "projectPo",
+            "type": "text",
+            "description": "Project PO number",
+            "options": null
+          },
+          {
+            "name": "currency",
+            "type": "text",
+            "description": "Quote currency",
+            "options": null
+          },
+          {
+            "name": "fxToBase",
+            "type": "number",
+            "description": "FX rate to base currency",
+            "options": null
+          },
+          {
+            "name": "templateId",
+            "type": "text",
+            "description": "Company template ID reference",
+            "options": null
+          },
+          {
+            "name": "taxRate",
+            "type": "number",
+            "description": "Tax rate",
+            "options": null
+          },
+          {
+            "name": "discountType",
+            "type": "text",
+            "description": "Discount type",
+            "options": null
+          },
+          {
+            "name": "discountValue",
+            "type": "number",
+            "description": "Discount value",
+            "options": null
+          },
+          {
+            "name": "headerBuffer",
+            "type": "number",
+            "description": "Header buffer percentage",
+            "options": null
+          },
+          {
+            "name": "status",
+            "type": "text",
+            "description": "Quotation status",
+            "options": [
+              "Current",
+              "Revised",
+              "Expired"
+            ]
+          },
+          {
+            "name": "version",
+            "type": "number",
+            "description": "Version number for revisions",
+            "options": null
+          },
+          {
+            "name": "parentQuoteId",
+            "type": "text",
+            "description": "Parent quote ID for revisions",
+            "options": null
+          },
+          {
+            "name": "parentQuoteNumber",
+            "type": "text",
+            "description": "Parent quote number for revisions",
+            "options": null
+          },
+          {
+            "name": "invoiceGenerated",
+            "type": "bool",
+            "description": "Has invoice been generated",
+            "options": null
+          },
+          {
+            "name": "invoiceId",
+            "type": "text",
+            "description": "Generated invoice ID",
+            "options": null
+          },
+          {
+            "name": "notes",
+            "type": "text",
+            "description": "Quotation notes",
+            "options": null
+          },
+          {
+            "name": "subtotal",
+            "type": "number",
+            "description": "Subtotal amount",
+            "options": null
+          },
+          {
+            "name": "taxAmount",
+            "type": "number",
+            "description": "Tax amount",
+            "options": null
+          },
+          {
+            "name": "discountAmount",
+            "type": "number",
+            "description": "Discount amount",
+            "options": null
+          },
+          {
+            "name": "grandTotal",
+            "type": "number",
+            "description": "Grand total amount",
+            "options": null
+          }
+        ]
+      },
+      "response_format": "wrapper",
+      "exported_at": "2025-10-22T11:29:30.284Z",
+      "description": "Quotation records with status tracking"
+    },
+    "quotation_lines": {
+      "data": [
+        {
+          "quotationId": "5f3d7816-83ab-48c2-9ef6-05d1a15add06",
+          "serviceId": "rtl-cam-snyfx3",
+          "bundleId": null,
+          "serviceName": "Sony FX3 Camera",
+          "description": "",
+          "rate": 30000,
+          "bundleCost": 0,
+          "bufferPercent": 0,
+          "adjustedRate": 30000,
+          "quantity": 1,
+          "lineTotal": 30000,
+          "isBundle": false,
+          "fromBundle": null,
+          "notes": "",
+          "lineOrder": 2,
+          "id": "45cf1964-9aa1-4e47-bd03-a505257327f8",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "quotation_lines",
+          "created_at": 1761037504312,
+          "updated_at": 1761037504312,
+          "_rid": "pBtjAL8RWCdu+ycAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCdu+ycAAAAAAA==/",
+          "_etag": "\"1c0572b0-0000-0800-0000-68f74cc00000\"",
+          "_attachments": "attachments/",
+          "_ts": 1761037504
+        },
+        {
+          "quotationId": "5f3d7816-83ab-48c2-9ef6-05d1a15add06",
+          "serviceId": "b6407bce-74d9-4934-a367-5214348c00ad",
+          "bundleId": null,
+          "serviceName": "DVC Indoor Shoot – 1 Day",
+          "description": "Studio/indoor setup",
+          "rate": 0,
+          "bundleCost": 450000,
+          "bufferPercent": 0,
+          "adjustedRate": 450000,
+          "quantity": 1,
+          "lineTotal": 450000,
+          "isBundle": true,
+          "fromBundle": null,
+          "notes": "",
+          "lineOrder": 1,
+          "id": "3a9287c9-ef62-4110-9de0-41abee9715e2",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "quotation_lines",
+          "created_at": 1761037503088,
+          "updated_at": 1761037503088,
+          "_rid": "pBtjAL8RWCdr+ycAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCdr+ycAAAAAAA==/",
+          "_etag": "\"1c054db0-0000-0800-0000-68f74cbf0000\"",
+          "_attachments": "attachments/",
+          "_ts": 1761037503
+        },
+        {
+          "quotationId": "0c9d3acd-c327-4541-8a79-ca57e8d08e4e",
+          "serviceId": "rtl-cam-snyfx3",
+          "bundleId": null,
+          "serviceName": "Sony FX3 Camera",
+          "description": "",
+          "rate": 30000,
+          "bundleCost": 0,
+          "bufferPercent": 0,
+          "adjustedRate": 30000,
+          "quantity": 1,
+          "lineTotal": 30000,
+          "isBundle": false,
+          "fromBundle": null,
+          "notes": "",
+          "lineOrder": 2,
+          "id": "4b6718c3-5f38-4bfb-b24c-862a1390aea0",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "quotation_lines",
+          "created_at": 1761035992671,
+          "updated_at": 1761035992671,
+          "_rid": "pBtjAL8RWCdC9ycAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCdC9ycAAAAAAA==/",
+          "_etag": "\"1b0588c4-0000-0800-0000-68f746d80000\"",
+          "_attachments": "attachments/",
+          "_ts": 1761035992
+        },
+        {
+          "quotationId": "0c9d3acd-c327-4541-8a79-ca57e8d08e4e",
+          "serviceId": "b6407bce-74d9-4934-a367-5214348c00ad",
+          "bundleId": null,
+          "serviceName": "DVC Indoor Shoot – 1 Day",
+          "description": "Studio/indoor setup",
+          "rate": 0,
+          "bundleCost": 450000,
+          "bufferPercent": 0,
+          "adjustedRate": 450000,
+          "quantity": 1,
+          "lineTotal": 450000,
+          "isBundle": true,
+          "fromBundle": null,
+          "notes": "",
+          "lineOrder": 1,
+          "id": "c91b4f10-5429-4576-93a5-9ba7370b0d97",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "quotation_lines",
+          "created_at": 1761035991334,
+          "updated_at": 1761035991334,
+          "_rid": "pBtjAL8RWCdB9ycAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCdB9ycAAAAAAA==/",
+          "_etag": "\"1b0564c4-0000-0800-0000-68f746d70000\"",
+          "_attachments": "attachments/",
+          "_ts": 1761035991
+        },
+        {
+          "quotationId": "e4e61c48-31ac-400b-b7b2-e18f933c9d72",
+          "serviceId": "b6407bce-74d9-4934-a367-5214348c00ad",
+          "bundleId": null,
+          "serviceName": "DVC Indoor Shoot – 1 Day",
+          "description": "Studio/indoor setup",
+          "rate": 0,
+          "bundleCost": 450000,
+          "bufferPercent": 0,
+          "adjustedRate": 450000,
+          "quantity": 1,
+          "lineTotal": 450000,
+          "isBundle": true,
+          "fromBundle": null,
+          "notes": "",
+          "lineOrder": 1,
+          "id": "de1592c2-7abf-4575-97f9-4a4bf0367021",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "quotation_lines",
+          "created_at": 1760948664185,
+          "updated_at": 1760948664185,
+          "_rid": "pBtjAL8RWCcqsicAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCcqsicAAAAAAA==/",
+          "_etag": "\"d804e849-0000-0800-0000-68f5f1b80000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760948664
+        },
+        {
+          "quotationId": "40ea384f-2dfd-48ed-a72d-0a5ed0d09c98",
+          "serviceId": "rtl-cam-snyfx3",
+          "bundleId": null,
+          "serviceName": "Sony FX3 Camera",
+          "description": "",
+          "rate": 30000,
+          "bundleCost": 0,
+          "bufferPercent": 0,
+          "adjustedRate": 30000,
+          "quantity": 1,
+          "lineTotal": 30000,
+          "isBundle": false,
+          "fromBundle": null,
+          "notes": "",
+          "lineOrder": 2,
+          "id": "a5da63f1-1df3-4792-a1b4-403447dedd4b",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "quotation_lines",
+          "created_at": 1760948577294,
+          "updated_at": 1760948577294,
+          "_rid": "pBtjAL8RWCcfsicAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCcfsicAAAAAAA==/",
+          "_etag": "\"d804b439-0000-0800-0000-68f5f1610000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760948577
+        },
+        {
+          "quotationId": "40ea384f-2dfd-48ed-a72d-0a5ed0d09c98",
+          "serviceId": "b6407bce-74d9-4934-a367-5214348c00ad",
+          "bundleId": null,
+          "serviceName": "DVC Indoor Shoot – 1 Day",
+          "description": "Studio/indoor setup",
+          "rate": 0,
+          "bundleCost": 450000,
+          "bufferPercent": 0,
+          "adjustedRate": 450000,
+          "quantity": 1,
+          "lineTotal": 450000,
+          "isBundle": true,
+          "fromBundle": null,
+          "notes": "",
+          "lineOrder": 1,
+          "id": "ad536236-55e7-4ee1-a639-2d6f25db759b",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "quotation_lines",
+          "created_at": 1760948576537,
+          "updated_at": 1760948576537,
+          "_rid": "pBtjAL8RWCccsicAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCccsicAAAAAAA==/",
+          "_etag": "\"d8049239-0000-0800-0000-68f5f1600000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760948576
+        },
+        {
+          "bundleCost": 0,
+          "isOptional": false,
+          "quantity": 1,
+          "quotationId": "test-quotation-1",
+          "rate": 1000,
+          "lineTotal": 1000,
+          "lineBuffer": 0,
+          "description": "Test service A description",
+          "serviceId": "test-service-1",
+          "serviceName": "Test Service A",
+          "adjustedRate": 1000,
+          "serviceCode": "SRV-A",
+          "category": "Test",
+          "contentType": "Service",
+          "teamRoles": "Developer",
+          "unit": "item",
+          "id": "959b7b2b-e4f1-41cd-89a7-67df5ff36b1d",
+          "created_at": 1760870699486,
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "quotation_lines",
+          "updated_at": 1760870699486,
+          "_rid": "pBtjAL8RWCcdYCcAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCcdYCcAAAAAAA==/",
+          "_etag": "\"a404a1f4-0000-0800-0000-68f4c12b0000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760870699
+        },
+        {
+          "quotationId": "c86ad429-e2a3-4d73-bf3c-83d447a9200a",
+          "serviceId": "b6407bce-74d9-4934-a367-5214348c00ad",
+          "bundleId": null,
+          "serviceName": "DVC Indoor Shoot – 1 Day",
+          "description": "Studio/indoor setup",
+          "rate": 0,
+          "bundleCost": 450000,
+          "bufferPercent": 0,
+          "adjustedRate": 450000,
+          "quantity": 1,
+          "lineTotal": 450000,
+          "isBundle": true,
+          "fromBundle": null,
+          "notes": "",
+          "lineOrder": 1,
+          "id": "3eddd376-2019-481e-bd1a-e221899952b8",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "quotation_lines",
+          "created_at": 1760870256254,
+          "updated_at": 1760870256254,
+          "_rid": "pBtjAL8RWCe8XycAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCe8XycAAAAAAA==/",
+          "_etag": "\"a404f9aa-0000-0800-0000-68f4bf700000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760870256
+        },
+        {
+          "quotationId": "9a91326d-82a0-40e3-b1fc-69640ed872fd",
+          "serviceId": "rtl-cam-snyfx3",
+          "bundleId": null,
+          "serviceName": "Sony FX3 Camera",
+          "description": "",
+          "rate": 30000,
+          "bundleCost": 0,
+          "bufferPercent": 0,
+          "adjustedRate": 30000,
+          "quantity": 1,
+          "lineTotal": 30000,
+          "isBundle": false,
+          "fromBundle": null,
+          "notes": "",
+          "lineOrder": 2,
+          "id": "3663bead-5ad8-416d-a18b-a476cd33380c",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "quotation_lines",
+          "created_at": 1760870230716,
+          "updated_at": 1760870230716,
+          "_rid": "pBtjAL8RWCe5XycAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCe5XycAAAAAAA==/",
+          "_etag": "\"a404b7a5-0000-0800-0000-68f4bf560000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760870230
+        },
+        {
+          "quotationId": "9a91326d-82a0-40e3-b1fc-69640ed872fd",
+          "serviceId": "b6407bce-74d9-4934-a367-5214348c00ad",
+          "bundleId": null,
+          "serviceName": "DVC Indoor Shoot – 1 Day",
+          "description": "Studio/indoor setup",
+          "rate": 0,
+          "bundleCost": 450000,
+          "bufferPercent": 0,
+          "adjustedRate": 450000,
+          "quantity": 1,
+          "lineTotal": 450000,
+          "isBundle": true,
+          "fromBundle": null,
+          "notes": "",
+          "lineOrder": 1,
+          "id": "8733dd5e-16d8-4f72-ba80-4f91581e7669",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "quotation_lines",
+          "created_at": 1760870230162,
+          "updated_at": 1760870230162,
+          "_rid": "pBtjAL8RWCe4XycAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCe4XycAAAAAAA==/",
+          "_etag": "\"a40497a5-0000-0800-0000-68f4bf560000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760870230
+        },
+        {
+          "quotationId": "92569347-a5db-4c22-acab-8563fcbcdf5a",
+          "serviceId": "rtl-cam-snyfx3",
+          "bundleId": null,
+          "serviceName": "Sony FX3 Camera",
+          "description": "",
+          "rate": 30000,
+          "bundleCost": 0,
+          "bufferPercent": 0,
+          "adjustedRate": 30000,
+          "quantity": 1,
+          "lineTotal": 30000,
+          "isBundle": false,
+          "fromBundle": null,
+          "notes": "",
+          "lineOrder": 2,
+          "id": "fb4be632-7713-4328-bbe5-0378034a35d0",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "quotation_lines",
+          "created_at": 1760869459042,
+          "updated_at": 1760869459042,
+          "_rid": "pBtjAL8RWCe8XicAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCe8XicAAAAAAA==/",
+          "_etag": "\"a404ed2c-0000-0800-0000-68f4bc530000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760869459
+        },
+        {
+          "quotationId": "92569347-a5db-4c22-acab-8563fcbcdf5a",
+          "serviceId": "b6407bce-74d9-4934-a367-5214348c00ad",
+          "bundleId": null,
+          "serviceName": "DVC Indoor Shoot – 1 Day",
+          "description": "Studio/indoor setup",
+          "rate": 0,
+          "bundleCost": 450000,
+          "bufferPercent": 0,
+          "adjustedRate": 450000,
+          "quantity": 1,
+          "lineTotal": 450000,
+          "isBundle": true,
+          "fromBundle": null,
+          "notes": "",
+          "lineOrder": 1,
+          "id": "942197a3-11fd-4f5c-a91c-2e6e2051b356",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "quotation_lines",
+          "created_at": 1760869458194,
+          "updated_at": 1760869458194,
+          "_rid": "pBtjAL8RWCe7XicAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCe7XicAAAAAAA==/",
+          "_etag": "\"a404c52c-0000-0800-0000-68f4bc520000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760869458
+        },
+        {
+          "quotationId": "8f9763b4-1788-446c-aa58-b2080f85dc7e",
+          "serviceId": "b6407bce-74d9-4934-a367-5214348c00ad",
+          "bundleId": null,
+          "serviceName": "DVC Indoor Shoot – 1 Day",
+          "description": "Studio/indoor setup",
+          "rate": 0,
+          "bundleCost": 450000,
+          "bufferPercent": 0,
+          "adjustedRate": 450000,
+          "quantity": 1,
+          "lineTotal": 450000,
+          "isBundle": true,
+          "fromBundle": null,
+          "notes": "",
+          "lineOrder": 1,
+          "id": "3fb81ce9-22cf-45fa-8a83-8c87bfbacb97",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "quotation_lines",
+          "created_at": 1760869430178,
+          "updated_at": 1760869430178,
+          "_rid": "pBtjAL8RWCezXicAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCezXicAAAAAAA==/",
+          "_etag": "\"a4045e28-0000-0800-0000-68f4bc360000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760869430
+        }
+      ],
+      "count": 14,
+      "total_available": 14,
+      "table": "quotation_lines",
+      "schema": {
+        "name": "quotation_lines",
+        "fields": [
+          {
+            "name": "id",
+            "type": "text",
+            "description": "Unique identifier",
+            "options": null
+          },
+          {
+            "name": "quotationId",
+            "type": "text",
+            "description": "Quotation ID reference",
+            "options": null
+          },
+          {
+            "name": "lineId",
+            "type": "text",
+            "description": "Line ID within quotation",
+            "options": null
+          },
+          {
+            "name": "serviceId",
+            "type": "text",
+            "description": "Service ID reference",
+            "options": null
+          },
+          {
+            "name": "serviceCode",
+            "type": "text",
+            "description": "Service code",
+            "options": null
+          },
+          {
+            "name": "serviceName",
+            "type": "text",
+            "description": "Service name",
+            "options": null
+          },
+          {
+            "name": "category",
+            "type": "text",
+            "description": "Service category",
+            "options": null
+          },
+          {
+            "name": "contentType",
+            "type": "text",
+            "description": "Content type",
+            "options": null
+          },
+          {
+            "name": "teamRoles",
+            "type": "text",
+            "description": "Team roles",
+            "options": null
+          },
+          {
+            "name": "description",
+            "type": "text",
+            "description": "Line description",
+            "options": null
+          },
+          {
+            "name": "rate",
+            "type": "number",
+            "description": "Base rate",
+            "options": null
+          },
+          {
+            "name": "bundleCost",
+            "type": "number",
+            "description": "Bundle cost",
+            "options": null
+          },
+          {
+            "name": "lineBuffer",
+            "type": "number",
+            "description": "Line buffer percentage",
+            "options": null
+          },
+          {
+            "name": "quantity",
+            "type": "number",
+            "description": "Quantity",
+            "options": null
+          },
+          {
+            "name": "unit",
+            "type": "text",
+            "description": "Unit",
+            "options": null
+          },
+          {
+            "name": "isOptional",
+            "type": "bool",
+            "description": "Is optional",
+            "options": null
+          },
+          {
+            "name": "adjustedRate",
+            "type": "number",
+            "description": "Adjusted rate",
+            "options": null
+          },
+          {
+            "name": "lineTotal",
+            "type": "number",
+            "description": "Line total",
+            "options": null
+          }
+        ]
+      },
+      "response_format": "wrapper",
+      "exported_at": "2025-10-22T11:29:31.354Z",
+      "description": "Quotation line items and calculations"
+    },
+    "invoices": {
+      "data": [
+        {
+          "number": "INV-202510-99133057",
+          "clientName": "Sana Sarah’s Salon",
+          "contactPerson": "Saim Ali",
+          "projectPo": "Photoshoot",
+          "currency": "PKR",
+          "issueDate": "2025-10-21",
+          "dueDate": "2025-11-20",
+          "templateId": "2651f4ce-1c6f-438f-92c5-28c147f1e8c7",
+          "headerBuffer": 0.5,
+          "taxRate": 0.15,
+          "discountType": "None",
+          "discountValue": 0,
+          "clientAddress": "",
+          "subtotal": 480000,
+          "taxAmount": 108000,
+          "discountAmount": 0,
+          "grandTotal": 828000,
+          "quotationId": "0c9d3acd-c327-4541-8a79-ca57e8d08e4e",
+          "id": "3c3ae7ad-a4b4-4f08-a944-a53611e932e6",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "invoices",
+          "created_at": 1761036103433,
+          "updated_at": 1761036103433,
+          "_rid": "pBtjAL8RWCew9ycAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCew9ycAAAAAAA==/",
+          "_etag": "\"1b05bed4-0000-0800-0000-68f747470000\"",
+          "_attachments": "attachments/",
+          "_ts": 1761036103
+        },
+        {
+          "number": "INV-202510-56957775",
+          "clientName": "Uniferoz Pvt Ltd.",
+          "contactPerson": "Rida Jilani",
+          "projectPo": "",
+          "currency": "PKR",
+          "issueDate": "2025-10-20",
+          "dueDate": "2025-11-19",
+          "templateId": "2651f4ce-1c6f-438f-92c5-28c147f1e8c7",
+          "headerBuffer": 0.5,
+          "taxRate": 0.15,
+          "discountType": "None",
+          "discountValue": 0,
+          "clientAddress": "32/8, Sector 15, Korangi Industrial Area, Karachi, Pakistan",
+          "subtotal": 450000,
+          "taxAmount": 101250,
+          "discountAmount": 0,
+          "grandTotal": 776250,
+          "quotationId": "e4e61c48-31ac-400b-b7b2-e18f933c9d72",
+          "id": "f02c82fc-79f0-4fae-929c-4a0feab53a05",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "invoices",
+          "created_at": 1760948863882,
+          "updated_at": 1760948863882,
+          "_rid": "pBtjAL8RWCdNsicAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCdNsicAAAAAAA==/",
+          "_etag": "\"d804aa6d-0000-0800-0000-68f5f27f0000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760948863
+        }
+      ],
+      "count": 2,
+      "total_available": 2,
+      "table": "invoices",
+      "schema": {
+        "name": "invoices",
+        "fields": [
+          {
+            "name": "id",
+            "type": "text",
+            "description": "Unique identifier",
+            "options": null
+          },
+          {
+            "name": "number",
+            "type": "text",
+            "description": "Invoice number (unique)",
+            "options": null
+          },
+          {
+            "name": "issueDate",
+            "type": "datetime",
+            "description": "Issue date",
+            "options": null
+          },
+          {
+            "name": "dueDate",
+            "type": "datetime",
+            "description": "Due date",
+            "options": null
+          },
+          {
+            "name": "clientName",
+            "type": "text",
+            "description": "Client name",
+            "options": null
+          },
+          {
+            "name": "contactPerson",
+            "type": "text",
+            "description": "Contact person",
+            "options": null
+          },
+          {
+            "name": "clientAddress",
+            "type": "text",
+            "description": "Client address",
+            "options": null
+          },
+          {
+            "name": "projectPo",
+            "type": "text",
+            "description": "Project PO number",
+            "options": null
+          },
+          {
+            "name": "currency",
+            "type": "text",
+            "description": "Invoice currency",
+            "options": null
+          },
+          {
+            "name": "fxToBase",
+            "type": "number",
+            "description": "FX rate to base currency",
+            "options": null
+          },
+          {
+            "name": "templateId",
+            "type": "text",
+            "description": "Company template ID reference",
+            "options": null
+          },
+          {
+            "name": "taxRate",
+            "type": "number",
+            "description": "Tax rate",
+            "options": null
+          },
+          {
+            "name": "discountType",
+            "type": "text",
+            "description": "Discount type",
+            "options": null
+          },
+          {
+            "name": "discountValue",
+            "type": "number",
+            "description": "Discount value",
+            "options": null
+          },
+          {
+            "name": "headerBuffer",
+            "type": "number",
+            "description": "Header buffer percentage",
+            "options": null
+          },
+          {
+            "name": "subtotal",
+            "type": "number",
+            "description": "Subtotal amount",
+            "options": null
+          },
+          {
+            "name": "taxAmount",
+            "type": "number",
+            "description": "Tax amount",
+            "options": null
+          },
+          {
+            "name": "discountAmount",
+            "type": "number",
+            "description": "Discount amount",
+            "options": null
+          },
+          {
+            "name": "grandTotal",
+            "type": "number",
+            "description": "Grand total amount",
+            "options": null
+          },
+          {
+            "name": "quotationId",
+            "type": "text",
+            "description": "Reference to original quotation",
+            "options": null
+          },
+          {
+            "name": "notes",
+            "type": "text",
+            "description": "Invoice notes",
+            "options": null
+          }
+        ]
+      },
+      "response_format": "wrapper",
+      "exported_at": "2025-10-22T11:29:32.557Z",
+      "description": "Invoice records and billing info"
+    },
+    "invoice_lines": {
+      "data": [
+        {
+          "invoiceId": "3c3ae7ad-a4b4-4f08-a944-a53611e932e6",
+          "serviceId": "rtl-cam-snyfx3",
+          "bundleId": null,
+          "serviceName": "Sony FX3 Camera",
+          "description": "",
+          "rate": 45000,
+          "bundleCost": 0,
+          "bufferPercent": 0,
+          "adjustedRate": 45000,
+          "quantity": 1,
+          "lineTotal": 45000,
+          "isBundle": false,
+          "fromBundle": null,
+          "notes": "",
+          "lineOrder": 2,
+          "id": "adfec12f-8cb7-4451-a9eb-4c74ad6814b3",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "invoice_lines",
+          "created_at": 1761036108864,
+          "updated_at": 1761036108864,
+          "_rid": "pBtjAL8RWCe69ycAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCe69ycAAAAAAA==/",
+          "_etag": "\"1b0579d5-0000-0800-0000-68f7474c0000\"",
+          "_attachments": "attachments/",
+          "_ts": 1761036108
+        },
+        {
+          "invoiceId": "3c3ae7ad-a4b4-4f08-a944-a53611e932e6",
+          "serviceId": "b6407bce-74d9-4934-a367-5214348c00ad",
+          "bundleId": null,
+          "serviceName": "DVC Indoor Shoot – 1 Day",
+          "description": "Studio/indoor setup",
+          "rate": 675000,
+          "bundleCost": 450000,
+          "bufferPercent": 0,
+          "adjustedRate": 675000,
+          "quantity": 1,
+          "lineTotal": 675000,
+          "isBundle": true,
+          "fromBundle": null,
+          "notes": "",
+          "lineOrder": 1,
+          "id": "4eab6841-0f1f-406a-9c27-eb6f9c5dd338",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "invoice_lines",
+          "created_at": 1761036106094,
+          "updated_at": 1761036106094,
+          "_rid": "pBtjAL8RWCe19ycAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCe19ycAAAAAAA==/",
+          "_etag": "\"1b0503d5-0000-0800-0000-68f7474a0000\"",
+          "_attachments": "attachments/",
+          "_ts": 1761036106
+        },
+        {
+          "invoiceId": "f02c82fc-79f0-4fae-929c-4a0feab53a05",
+          "serviceId": "b6407bce-74d9-4934-a367-5214348c00ad",
+          "bundleId": null,
+          "serviceName": "DVC Indoor Shoot – 1 Day",
+          "description": "Studio/indoor setup",
+          "rate": 675000,
+          "bundleCost": 450000,
+          "bufferPercent": 0,
+          "adjustedRate": 675000,
+          "quantity": 1,
+          "lineTotal": 675000,
+          "isBundle": true,
+          "fromBundle": null,
+          "notes": "",
+          "lineOrder": 1,
+          "id": "984fdcb2-d121-4963-af8c-d8ee5feae6a5",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "invoice_lines",
+          "created_at": 1760948864535,
+          "updated_at": 1760948864535,
+          "_rid": "pBtjAL8RWCdOsicAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCdOsicAAAAAAA==/",
+          "_etag": "\"d804c46d-0000-0800-0000-68f5f2800000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760948864
+        }
+      ],
+      "count": 3,
+      "total_available": 3,
+      "table": "invoice_lines",
+      "schema": {
+        "name": "invoice_lines",
+        "fields": [
+          {
+            "name": "id",
+            "type": "text",
+            "description": "Unique identifier",
+            "options": null
+          },
+          {
+            "name": "invoiceId",
+            "type": "text",
+            "description": "Invoice ID reference",
+            "options": null
+          },
+          {
+            "name": "lineId",
+            "type": "text",
+            "description": "Line ID within invoice",
+            "options": null
+          },
+          {
+            "name": "serviceId",
+            "type": "text",
+            "description": "Service ID reference",
+            "options": null
+          },
+          {
+            "name": "serviceCode",
+            "type": "text",
+            "description": "Service code",
+            "options": null
+          },
+          {
+            "name": "serviceName",
+            "type": "text",
+            "description": "Service name",
+            "options": null
+          },
+          {
+            "name": "category",
+            "type": "text",
+            "description": "Service category",
+            "options": null
+          },
+          {
+            "name": "contentType",
+            "type": "text",
+            "description": "Content type",
+            "options": null
+          },
+          {
+            "name": "teamRoles",
+            "type": "text",
+            "description": "Team roles",
+            "options": null
+          },
+          {
+            "name": "description",
+            "type": "text",
+            "description": "Line description",
+            "options": null
+          },
+          {
+            "name": "rate",
+            "type": "number",
+            "description": "Base rate",
+            "options": null
+          },
+          {
+            "name": "bundleCost",
+            "type": "number",
+            "description": "Bundle cost",
+            "options": null
+          },
+          {
+            "name": "lineBuffer",
+            "type": "number",
+            "description": "Line buffer percentage",
+            "options": null
+          },
+          {
+            "name": "quantity",
+            "type": "number",
+            "description": "Quantity",
+            "options": null
+          },
+          {
+            "name": "unit",
+            "type": "text",
+            "description": "Unit",
+            "options": null
+          },
+          {
+            "name": "isOptional",
+            "type": "bool",
+            "description": "Is optional",
+            "options": null
+          },
+          {
+            "name": "adjustedRate",
+            "type": "number",
+            "description": "Adjusted rate",
+            "options": null
+          },
+          {
+            "name": "lineTotal",
+            "type": "number",
+            "description": "Line total",
+            "options": null
+          }
+        ]
+      },
+      "response_format": "wrapper",
+      "exported_at": "2025-10-22T11:29:33.604Z",
+      "description": "Invoice line items and amounts"
+    },
+    "company_templates": {
+      "data": [
+        {
+          "name": "Digital Next",
+          "companyName": "Digital Next",
+          "companyPhone": "021 34166154",
+          "companyEmail": "info@digitalnext.co",
+          "companyLogo": "",
+          "companyAddress": "C-155 Block 2, Kehkashan,\nClifton, 75600, Karachi",
+          "defaultCurrency": "PKR",
+          "taxRate": 0.15,
+          "headerBuffer": 0.5,
+          "discountType": "None",
+          "discountValue": 0,
+          "quotationTerms": "1. This quotation is valid for 30 days from the date of issue.\n2. All rates are exclusive of applicable taxes unless stated otherwise.\n3. 50% advance payment required to commence work.\n4. Final payment due within 15 days of project completion.\n5. Additional revisions beyond scope will be charged separately.\n6. Travel and accommodation costs (if required) will be charged extra.\n7. Client to provide necessary permissions and clearances for shooting.",
+          "invoiceTerms": "1. Payment due within 15 days of invoice date.\n2. All payments to be made by cheque in the name of the company or credited online to the following bank account: \nBank Name: Habib Metropolitan Bank Ltd \nTitle: DIGITAL NEXT \nAccount No. 60119203017140144258 \nIBAN: PK34MPBL0119067140144258\nBranch Name: Saba Avenue Phase – V Ext. Karachi",
+          "quotationNotes": "Thank you for considering our services. We look forward to working with you on this project.",
+          "invoiceNotes": "Thank you for your business. Please remit payment as per the terms mentioned above.",
+          "isDefault": true,
+          "isActive": true,
+          "id": "2651f4ce-1c6f-438f-92c5-28c147f1e8c7",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "company_templates",
+          "created_at": 1760799448786,
+          "updated_at": 1760942391712,
+          "_rid": "pBtjAL8RWCeyDycAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCeyDycAAAAAAA==/",
+          "_etag": "\"d30465bb-0000-0800-0000-68f5d9370000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760942391
+        },
+        {
+          "name": "Bodybeat",
+          "companyName": "Bodybeat",
+          "companyPhone": "021 34166154",
+          "companyEmail": "info@bodybeatgroup.com",
+          "companyLogo": "",
+          "companyAddress": "C-155 Block 2, Kehkashan,\nClifton, Karachi - 75600",
+          "defaultCurrency": "PKR",
+          "taxRate": 0.15,
+          "headerBuffer": 0.5,
+          "discountType": "None",
+          "discountValue": 0,
+          "quotationTerms": "1. This quotation is valid for 30 days from the date of issue.\n2. All rates are exclusive of applicable taxes unless stated otherwise.\n3. 50% advance payment required to commence work.\n4. Final payment due within 15 days of project completion.\n5. Additional revisions beyond scope will be charged separately.\n6. Travel and accommodation costs (if required) will be charged extra.\n7. Client to provide necessary permissions and clearances for shooting.",
+          "invoiceTerms": "1. Payment due within 15 days of invoice date.\n2. All payments to be made by cheque in the name of the company or credited online to the following bank account: \nBank Name: Habib Metropolitan Bank Ltd \nTitle: BODYBEAT \nAccount No. 60119203017140137948\nIBAN: PK72MPBL0119067140137948\nBranch Name: Saba Avenue Phase – V Ext. Karachi",
+          "quotationNotes": "Thank you for considering our services. We look forward to working with you on this project.",
+          "invoiceNotes": "Thank you for your business. Please remit payment as per the terms mentioned above.",
+          "isDefault": false,
+          "isActive": true,
+          "id": "a942df47-423f-4a81-ac5a-e42f96744740",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "company_templates",
+          "created_at": 1760797677809,
+          "updated_at": 1760942960846,
+          "_rid": "pBtjAL8RWCd05SYAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCd05SYAAAAAAA==/",
+          "_etag": "\"d4046523-0000-0800-0000-68f5db700000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760942960
+        },
+        {
+          "name": "Default Template",
+          "companyName": "Production Services",
+          "companyPhone": "+92-300-1234567",
+          "companyEmail": "info@productionservices.com",
+          "companyAddress": "123 Business District, Karachi, Pakistan",
+          "companyLogo": "",
+          "defaultCurrency": "PKR",
+          "headerBuffer": 0.15,
+          "taxRate": 0.09,
+          "discountType": "None",
+          "discountValue": 0,
+          "quotationTerms": "Terms and Conditions:\n1. This quotation is valid for 30 days from the date of issue\n2. Payment terms are Net 30 days from invoice date\n3. All prices are exclusive of taxes unless stated otherwise\n4. Changes to scope may affect pricing and delivery timeline",
+          "invoiceTerms": "Payment Terms:\n1. Payment is due within 30 days of invoice date\n2. Late payment charges of 2% per month may apply\n3. All disputes must be raised within 7 days of invoice date\n4. Payment should be made to the account details provided",
+          "quotationNotes": "Thank you for considering our services. We look forward to working with you.",
+          "invoiceNotes": "Thank you for your business. Please remit payment by the due date to avoid late charges.",
+          "isDefault": false,
+          "isActive": true,
+          "id": "435691e8-b86a-4d5e-90f5-1ba20b21cc9c",
+          "created_at": 1760794875926,
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "company_templates",
+          "updated_at": 1760797677031,
+          "_rid": "pBtjAL8RWCeT4yYAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCeT4yYAAAAAAA==/",
+          "_etag": "\"770411f1-0000-0800-0000-68f3a3ed0000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760797677
+        }
+      ],
+      "count": 3,
+      "total_available": 3,
+      "table": "company_templates",
+      "schema": {
+        "name": "company_templates",
+        "fields": [
+          {
+            "name": "id",
+            "type": "text",
+            "description": "Unique template identifier",
+            "options": null
+          },
+          {
+            "name": "name",
+            "type": "text",
+            "description": "Template display name (e.g., 'Company A - 30 Day Terms')",
+            "options": null
+          },
+          {
+            "name": "companyName",
+            "type": "text",
+            "description": "Company name for documents",
+            "options": null
+          },
+          {
+            "name": "companyPhone",
+            "type": "text",
+            "description": "Company phone number",
+            "options": null
+          },
+          {
+            "name": "companyEmail",
+            "type": "text",
+            "description": "Company email address",
+            "options": null
+          },
+          {
+            "name": "companyAddress",
+            "type": "text",
+            "description": "Company address",
+            "options": null
+          },
+          {
+            "name": "companyLogo",
+            "type": "text",
+            "description": "Path to company logo image",
+            "options": null
+          },
+          {
+            "name": "defaultCurrency",
+            "type": "text",
+            "description": "Default currency for documents",
+            "options": null
+          },
+          {
+            "name": "headerBuffer",
+            "type": "number",
+            "description": "Default header buffer percentage",
+            "options": null
+          },
+          {
+            "name": "taxRate",
+            "type": "number",
+            "description": "Default tax rate",
+            "options": null
+          },
+          {
+            "name": "discountType",
+            "type": "text",
+            "description": "Default discount type",
+            "options": [
+              "None",
+              "Percent",
+              "Amount"
+            ]
+          },
+          {
+            "name": "discountValue",
+            "type": "number",
+            "description": "Default discount value",
+            "options": null
+          },
+          {
+            "name": "quotationTerms",
+            "type": "rich_text",
+            "description": "Default terms for quotations",
+            "options": null
+          },
+          {
+            "name": "invoiceTerms",
+            "type": "rich_text",
+            "description": "Default terms for invoices",
+            "options": null
+          },
+          {
+            "name": "quotationNotes",
+            "type": "rich_text",
+            "description": "Default notes for quotations",
+            "options": null
+          },
+          {
+            "name": "invoiceNotes",
+            "type": "rich_text",
+            "description": "Default notes for invoices",
+            "options": null
+          },
+          {
+            "name": "isDefault",
+            "type": "bool",
+            "description": "Whether this is the default template",
+            "options": null
+          },
+          {
+            "name": "isActive",
+            "type": "bool",
+            "description": "Whether this template is active",
+            "options": null
+          }
+        ]
+      },
+      "response_format": "wrapper",
+      "exported_at": "2025-10-22T11:29:37.343Z",
+      "description": "Multi-company template configurations"
+    },
+    "settings": {
+      "data": [
+        {
+          "id": "1",
+          "defaultCurrency": "PKR",
+          "baseCurrency": "PKR",
+          "taxRate": 0.15,
+          "discountType": "None",
+          "discountValue": 0,
+          "headerBuffer": 0.5,
+          "quotationTerms": "1. This quotation is valid for 30 days from the date of issue.\n2. All rates are exclusive of applicable taxes unless stated otherwise.\n3. 50% advance payment required to commence work.\n4. Final payment due within 15 days of project completion.\n5. Additional revisions beyond scope will be charged separately.\n6. Travel and accommodation costs (if required) will be charged extra.\n7. Client to provide necessary permissions and clearances for shooting.",
+          "invoiceTerms": "1. Payment due within 30 days of invoice date.\n2. All payments to be made by cheque in the name of the company or credited online to the following bank account: \n3. All bank charges to be borne by the client.\n4. Goods remain the property of the company until full payment is received.\n5. Any disputes must be raised within 7 days of invoice receipt.",
+          "quotationNotes": "Thank you for considering our services. We look forward to working with you on this project.",
+          "invoiceNotes": "Thank you for your business. Please remit payment as per the terms mentioned above.",
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "settings",
+          "created_at": 1760708994501,
+          "updated_at": 1760800570508,
+          "_rid": "pBtjAL8RWCfTVCYAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCfTVCYAAAAAAA==/",
+          "_etag": "\"7904c7dc-0000-0800-0000-68f3af3a0000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760800570
+        }
+      ],
+      "count": 1,
+      "total_available": 1,
+      "table": "settings",
+      "schema": {
+        "name": "settings",
+        "fields": [
+          {
+            "name": "id",
+            "type": "text",
+            "description": "Fixed ID (always 1 for singleton)",
+            "options": null
+          },
+          {
+            "name": "defaultCurrency",
+            "type": "text",
+            "description": "Default currency code (PKR, USD, AED)",
+            "options": null
+          },
+          {
+            "name": "baseCurrency",
+            "type": "text",
+            "description": "Base currency for conversions",
+            "options": null
+          },
+          {
+            "name": "taxRate",
+            "type": "number",
+            "description": "Default tax rate (0.09 = 9%)",
+            "options": null
+          },
+          {
+            "name": "discountType",
+            "type": "text",
+            "description": "Default discount type",
+            "options": [
+              "None",
+              "Percent",
+              "Amount"
+            ]
+          },
+          {
+            "name": "discountValue",
+            "type": "number",
+            "description": "Default discount value",
+            "options": null
+          },
+          {
+            "name": "headerBuffer",
+            "type": "number",
+            "description": "Default header buffer percentage",
+            "options": null
+          },
+          {
+            "name": "quotationTerms",
+            "type": "rich_text",
+            "description": "Default terms and conditions for quotations",
+            "options": null
+          },
+          {
+            "name": "invoiceTerms",
+            "type": "rich_text",
+            "description": "Default terms and conditions for invoices",
+            "options": null
+          },
+          {
+            "name": "quotationNotes",
+            "type": "rich_text",
+            "description": "Default notes for quotations",
+            "options": null
+          },
+          {
+            "name": "invoiceNotes",
+            "type": "rich_text",
+            "description": "Default notes for invoices",
+            "options": null
+          }
+        ]
+      },
+      "response_format": "wrapper",
+      "exported_at": "2025-10-22T11:29:42.275Z",
+      "description": "Application settings and preferences"
+    },
+    "currency_rates": {
+      "data": [
+        {
+          "id": "aed-pkr",
+          "fromCur": "AED",
+          "toCur": "PKR",
+          "rate": 76,
+          "notes": "AED to PKR exchange rate",
+          "created_at": 1760559617793,
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "currency_rates",
+          "updated_at": 1760559617793,
+          "_rid": "pBtjAL8RWCeigiUAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCeigiUAAAAAAA==/",
+          "_etag": "\"ba03eed8-0000-0800-0000-68f002010000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760559617
+        },
+        {
+          "id": "usd-pkr",
+          "fromCur": "USD",
+          "toCur": "PKR",
+          "rate": 280,
+          "notes": "USD to PKR exchange rate",
+          "created_at": 1760559617793,
+          "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
+          "gs_table_name": "currency_rates",
+          "updated_at": 1760559617793,
+          "_rid": "pBtjAL8RWCehgiUAAAAAAA==",
+          "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCehgiUAAAAAAA==/",
+          "_etag": "\"ba03edd8-0000-0800-0000-68f002010000\"",
+          "_attachments": "attachments/",
+          "_ts": 1760559617
+        }
+      ],
+      "count": 2,
+      "total_available": 2,
+      "table": "currency_rates",
+      "schema": {
+        "name": "currency_rates",
+        "fields": [
+          {
+            "name": "id",
+            "type": "text",
+            "description": "Unique identifier",
+            "options": null
+          },
+          {
+            "name": "fromCur",
+            "type": "text",
+            "description": "Source currency code",
+            "options": null
+          },
+          {
+            "name": "toCur",
+            "type": "text",
+            "description": "Target currency code",
+            "options": null
+          },
+          {
+            "name": "rate",
+            "type": "number",
+            "description": "Exchange rate",
+            "options": null
+          },
+          {
+            "name": "notes",
+            "type": "text",
+            "description": "Optional notes about the rate",
+            "options": null
+          }
+        ]
+      },
+      "response_format": "wrapper",
+      "exported_at": "2025-10-22T11:29:43.233Z",
+      "description": "Exchange rate data"
+    }
+  },
+  "summary": {
+    "total_tables": 10,
+    "total_records": 46,
+    "export_duration_ms": 19591,
+    "export_completed_at": "2025-10-22T11:29:43.234Z"
+  }
+}
