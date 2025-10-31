@@ -60,3 +60,22 @@ Seeding Data
     - Example with curl:
       - `curl -X POST https://<your-pages-domain>/admin/seed -H "x-seed-token: <token>"`
   - Response includes `inserted` count.
+
+Manual Seeding (no bindings needed)
+-----------------------------------
+If the environment bindings UI gives trouble, you can seed D1 directly from the dashboard or CLI:
+
+1) Generate SQL from the repo export
+- Run locally: `node scripts/generate-d1-seed-sql.mjs > scripts/d1-seed-from-export.sql`
+
+2) Option A — D1 Query Editor
+- Open Workers & Pages → D1 → your database → Query editor
+- Paste the contents of `scripts/d1-seed-from-export.sql` and run
+
+3) Option B — Wrangler CLI
+- Install Wrangler: `npm i -g wrangler`
+- Log in: `wrangler login`
+- Execute the SQL against remote D1:
+  - `wrangler d1 execute production_qi --file scripts/d1-seed-from-export.sql --remote`
+
+This writes rows into the `kv` table directly and you can start using the app immediately without calling `/admin/seed`.
