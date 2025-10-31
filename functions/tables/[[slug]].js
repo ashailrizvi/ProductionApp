@@ -24,19 +24,19 @@ function parseURL(req) {
 }
 
 async function ensureSchema(env) {
-  // Create a single generic store if it doesn't exist
-  // Run statements separately to avoid multi-statement exec issues
-  await env.DB.exec(
+  // Create a single generic store if it doesn't exist.
+  // Use prepared statements instead of exec to avoid runtime issues.
+  await env.DB.prepare(
     `CREATE TABLE IF NOT EXISTS kv (
       table_name TEXT NOT NULL,
       id TEXT NOT NULL,
       data TEXT NOT NULL,
       PRIMARY KEY (table_name, id)
     )`
-  );
-  await env.DB.exec(
+  ).run();
+  await env.DB.prepare(
     `CREATE INDEX IF NOT EXISTS idx_kv_table ON kv(table_name)`
-  );
+  ).run();
 }
 
 async function getNextId(env, table) {

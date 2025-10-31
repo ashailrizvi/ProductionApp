@@ -14,18 +14,18 @@ function headers(extra = {}) {
 }
 
 async function ensureSchema(env) {
-  // Run statements separately to avoid multi-statement exec inconsistencies
-  await env.DB.exec(
+  // Use prepared statements to avoid exec quirks
+  await env.DB.prepare(
     `CREATE TABLE IF NOT EXISTS kv (
       table_name TEXT NOT NULL,
       id TEXT NOT NULL,
       data TEXT NOT NULL,
       PRIMARY KEY (table_name, id)
     )`
-  );
-  await env.DB.exec(
+  ).run();
+  await env.DB.prepare(
     `CREATE INDEX IF NOT EXISTS idx_kv_table ON kv(table_name)`
-  );
+  ).run();
 }
 
 export async function onRequestPost({ request, env }) {
