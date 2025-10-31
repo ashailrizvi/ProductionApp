@@ -50,6 +50,16 @@ export async function onRequest(context) {
   const method = (request.method || 'GET').toUpperCase();
   const { url, parts } = parseURL(request);
 
+  if (!env || !env.DB) {
+    return new Response(
+      JSON.stringify({
+        error: 'D1 binding missing',
+        detail: 'No D1 database bound as "DB" for this environment. Add it in Pages → Settings → Bindings and redeploy.'
+      }),
+      { status: 500, headers: headers() }
+    );
+  }
+
   // CORS preflight
   if (method === 'OPTIONS') {
     return new Response('', { status: 200, headers: headers() });

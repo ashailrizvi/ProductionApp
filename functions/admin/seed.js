@@ -26,6 +26,15 @@ async function ensureSchema(env) {
 }
 
 export async function onRequestPost({ request, env }) {
+  if (!env || !env.DB) {
+    return new Response(
+      JSON.stringify({
+        error: 'D1 binding missing',
+        detail: 'No D1 database bound as "DB". In Pages → Settings → Bindings, add a D1 binding named DB for this environment, then redeploy.'
+      }),
+      { status: 500, headers: headers() }
+    );
+  }
   // Optional token protection
   const configured = (env.SEED_TOKEN || '').toString();
   if (configured) {
@@ -67,4 +76,3 @@ export async function onRequestPost({ request, env }) {
 export async function onRequestOptions() {
   return new Response('', { status: 200, headers: headers() });
 }
-
