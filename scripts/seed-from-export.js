@@ -44,16 +44,27 @@ function main() {
 
   for (const name of Object.keys(srcTables)) {
     if (!TABLES.has(name)) continue; // ignore unknown tables
+    
+    const outPath = path.join(DATA_DIR, `${name}.json`);
+    
+    // Check if file exists and has data
+    if (fs.existsSync(outPath)) {
+      const existingData = JSON.parse(fs.readFileSync(outPath, 'utf8'));
+      if (Array.isArray(existingData) && existingData.length > 0) {
+        console.log(`Skipping ${name}.json - file exists with ${existingData.length} records`);
+        continue;
+      }
+    }
+
     const entry = srcTables[name];
     const data = Array.isArray(entry?.data) ? entry.data : [];
-    const outPath = path.join(DATA_DIR, `${name}.json`);
     fs.writeFileSync(outPath, JSON.stringify(data, null, 2), 'utf8');
     written++;
     console.log(`Wrote ${data.length} rows to ${path.relative(ROOT, outPath)}`);
   }
 
   if (written === 0) {
-    console.warn('No matching tables were found in export. Nothing written.');
+    console.log('No new tables written - existing data preserved.');
   }
 }
 
