@@ -1,0 +1,11 @@
+name = "production-app-pages"
+compatibility_date = "2024-05-01"
+
+[observability]
+enabled = true
+
+[[d1_databases]]
+binding = "DB"            # Used in functions as env.DB
+database_name = "production_qi"
+database_id = "REPLACE_WITH_YOUR_D1_ID"
+

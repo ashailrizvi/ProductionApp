@@ -4,7 +4,8 @@
     "name": "Instagram Reel – Edit Only",
     "parentServiceId": null,
     "description": "",
-    "id": "15"
+    "id": "15",
+    "unit": "per day"
   },
   {
     "bundleCode": "BNDL-REEL-SHOOTEDIT",
