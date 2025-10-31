@@ -5,7 +5,7 @@ This project is ready to deploy on Cloudflare Pages with a working `/tables/*` A
 
 Quick Start
 -----------
-- Create a Cloudflare account (if you don’t have one).
+- Create a Cloudflare account (if you don't have one).
 - Pages → Create a project → Connect this GitHub repo.
 - Build command: none
 - Output directory: /
@@ -14,7 +14,9 @@ Quick Start
 D1 Database
 -----------
 - Workers & Pages → D1 → Create database (e.g., `production_qi`).
-- Initialize schema: open the D1 Query editor and run `scripts/d1-schema.sql` from this repo.
+- Schema is auto-initialized by the Pages Function on first request. You can also create it manually via D1 Query editor:
+  - `CREATE TABLE IF NOT EXISTS kv (table_name TEXT NOT NULL, id TEXT NOT NULL, data TEXT NOT NULL, PRIMARY KEY (table_name, id));`
+  - `CREATE INDEX IF NOT EXISTS idx_kv_table ON kv(table_name);`
 
 Bind D1 to Pages
 ----------------
@@ -23,59 +25,32 @@ Bind D1 to Pages
 - Binding name: `DB`
 - Database: select your `production_qi` database
 
-Note: If the Add binding button is disabled with a message saying
-“Bindings for this project are being managed through wrangler.toml”,
-it means the repo contains a `wrangler.toml`. This project now ships
-`wrangler.local.example.toml` instead. If you still have a committed
-`wrangler.toml`, delete or rename it so Pages switches to dashboard‑managed
-bindings, then redeploy.
-
 How It Works
 ------------
 - Static files are served from the repo root (`index.html`, `js/*`, `assets/*`).
-- API routes under `/tables/*` are handled by `functions/tables/[...slug].js`.
+- API routes under `/tables/*` are handled by `functions/tables/[[slug]].js`.
 - Data is stored as JSON in a single D1 table `kv(table_name, id, data)`.
 - Your existing `fetch('tables/...')` calls keep working.
 
 Local Development (optional)
 ----------------------------
 - Install Wrangler: `npm i -g wrangler`
-- Update `wrangler.toml` with your D1 `database_id`.
 - Run: `wrangler pages dev .`
-
-Notes
------
-- ID generation: if you don’t provide `id`, the API assigns numeric string IDs within each table (1, 2, 3, …).
-- Search: `?search=` performs a case-insensitive LIKE on the stored JSON text.
-- Pagination: `?page=` and `?limit=` are supported for list endpoints.
-- CORS: enabled for `*` to match the local dev-server’s behavior.
 
 Seeding Data
 ------------
-- This repo includes `database-export.json` and an admin seed function.
-- After the first deploy and D1 binding:
-  - (Optional) Set a project env var `SEED_TOKEN` to a secret value.
-  - Send a POST request to `/admin/seed`:
-    - If `SEED_TOKEN` is set, include header: `x-seed-token: <your token>`
-    - Example with curl:
-      - `curl -X POST https://<your-pages-domain>/admin/seed -H "x-seed-token: <token>"`
-  - Response includes `inserted` count.
+- Option A — Admin seed from export: POST to `/admin/seed` (optionally set env var `SEED_TOKEN` and send header `x-seed-token`).
+- Option B — Manual KV seed from local JSON files:
+  1. Generate SQL: `pwsh -File .\scripts\generate-d1-seed-kv.ps1` → creates `scripts/d1-seed-kv.sql`
+  2. Open D1 → your database → Query editor, paste and run the file contents
 
-Manual Seeding (no bindings needed)
------------------------------------
-If the environment bindings UI gives trouble, you can seed D1 directly from the dashboard or CLI:
+Verification
+------------
+- D1 query: `SELECT table_name, COUNT(*) AS rows FROM kv GROUP BY table_name ORDER BY table_name;`
+- Endpoints: `/tables/settings`, `/tables/services?limit=1`, `/tables/bundles?limit=1`
 
-1) Generate SQL from the repo export
-- Run locally: `node scripts/generate-d1-seed-sql.mjs > scripts/d1-seed-from-export.sql`
+Troubleshooting
+---------------
+- `D1 binding missing`: ensure a D1 binding named `DB` is configured for the environment (Production/Preview) and redeploy.
+- `Cannot read properties of undefined (reading 'duration')`: ensure you are on a deployment that initializes schema using prepared statements (already in this repo). As a workaround, pre-create `kv` with the SQL shown above.
 
-2) Option A — D1 Query Editor
-- Open Workers & Pages → D1 → your database → Query editor
-- Paste the contents of `scripts/d1-seed-from-export.sql` and run
-
-3) Option B — Wrangler CLI
-- Install Wrangler: `npm i -g wrangler`
-- Log in: `wrangler login`
-- Execute the SQL against remote D1:
-  - `wrangler d1 execute production_qi --file scripts/d1-seed-from-export.sql --remote`
-
-This writes rows into the `kv` table directly and you can start using the app immediately without calling `/admin/seed`.

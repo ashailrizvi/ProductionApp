@@ -371,8 +371,73 @@ The system is now **production-ready** with a complete quotation-to-invoice work
 
 **Last Updated**: October 2025 - Quotation Module Transformation Complete
 
+## Cloudflare Pages + D1 Setup (KV)
+
+This app reads and writes data via a single generic KV-style table in Cloudflare D1, exposed by the Pages Function at `functions/tables/[[slug]].js`. The table schema is:
+
+- `kv(table_name TEXT, id TEXT, data TEXT, PRIMARY KEY(table_name,id))`
+
+The UI loads data through `/tables/<table>` endpoints (for example `tables/services`, `tables/settings`). To deploy and seed data:
+
+- Bind D1 in Pages (name must be `DB`)
+  - Pages → Project → Settings → Functions → Bindings → Add → D1 database
+  - Variable name: `DB`
+  - Database: your D1 instance (e.g., `production_qi`)
+  - Save, then redeploy to apply bindings
+
+- Initialize + Seed KV from local JSON
+  - Generate a KV seed from the JSON files under `data/`:
+    - PowerShell (project root): `pwsh -File .\\scripts\\generate-d1-seed-kv.ps1`
+    - This produces `scripts/d1-seed-kv.sql`
+  - Open Cloudflare Dashboard → D1 → Query editor (same DB bound as `DB`)
+    - Paste the entire contents of `scripts/d1-seed-kv.sql` and run
+
+- Alternative seed (from export): POST to `/admin/seed` (see `functions/admin/seed.js`). Optionally set `SEED_TOKEN` and send header `x-seed-token`.
+
+- Verify data is available
+  - D1 (Query editor): `SELECT table_name, COUNT(*) AS rows FROM kv GROUP BY table_name ORDER BY table_name;`
+  - App endpoints (production URL): `/tables/settings`, `/tables/services?limit=1`, `/tables/bundles?limit=1`
+  - Expected: 200 JSON responses. If empty, confirm you seeded into `kv` (not physical tables).
+
+- Redeploy changes
+  - Pages deployments are tied to Git commits. Push changes before redeploying:
+    - `git add -A && git commit -m "KV seed + D1 init" && git push`
+  - In Pages → Deployments, wait for the build to complete and verify the new commit hash.
+
+### Troubleshooting
+
+- 500 error `Cannot read properties of undefined (reading 'duration')` on `/tables/*`
+  - Cause: multi-statement `exec` on some runtimes. Fixed by initializing schema with prepared statements.
+  - Ensure latest deployment includes updates to:
+    - `functions/tables/[[slug]].js`
+    - `functions/admin/seed.js`
+  - Workaround: Pre-create schema in D1 Query editor:
+    - `CREATE TABLE IF NOT EXISTS kv (table_name TEXT NOT NULL, id TEXT NOT NULL, data TEXT NOT NULL, PRIMARY KEY (table_name,id));`
+    - `CREATE INDEX IF NOT EXISTS idx_kv_table ON kv(table_name);`
+
+- 500 `D1 binding missing`
+  - Ensure a D1 binding named `DB` is configured for the environment (Production/Preview) you’re visiting, then redeploy.
+
+- 404 on `/tables/...`
+  - Ensure Pages Functions are active (`functions/` at repo root) and Build System Version is 3. Redeploy after changes.
+
+- Data shows in D1 but UI is empty
+  - Verify KV counts and that you seeded KV, not standalone tables like `services`/`bundles`.
+  - Check the network panel in DevTools: requests to `tables/*` should be 200 with JSON.
+
+### Useful scripts
+
+- Generate KV seed from `data/*.json` – `scripts/d1-seed-kv.sql`:
+  - `scripts/generate-d1-seed-kv.ps1`
+
+### Quick verification snippets
+
+- List tables: `SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;`
+- Count rows by logical table: `SELECT table_name, COUNT(*) FROM kv GROUP BY table_name ORDER BY table_name;`
+
 ## Additional Fixes
 
 - Bundles: Fixed "Bundle Unit" dropdown showing empty options in create/edit. Units now load reliably and the existing selection is restored when editing.
 - Services: Added multi-selection with a master checkbox and bulk delete on the Services page.
-- Services Import (Excel): Now idempotent per Service Code � updates changed rows, skips unchanged.
+- Services Import (Excel): Now idempotent per Service Code ? updates changed rows, skips unchanged.
+
