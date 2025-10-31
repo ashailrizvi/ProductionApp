@@ -2,6 +2,14 @@
 
 A comprehensive web-based application for managing production services, quotations, invoices, customer relationships, and business workflow. Built with modern web technologies and designed specifically for production companies to streamline their quote-to-invoice process.
 
+## What's New (Latest Updates)
+
+- Customers: Excel Import added for bulk uploads. Supports columns: Client Name, NTN, Contact Person, Email, Website, Phone (multiple, semicolon-separated), Address, City, Country, Status, Notes. Re-imports are idempotent — unchanged rows are skipped; matching priority: NTN → Email → Client Name.
+- Customers: “Tax ID” renamed to “NTN” throughout UI and exports; added Website field; multiple phone numbers supported and normalized.
+- Invoices: Added status workflow with three statuses — Pending (default), Cleared, Cancelled — editable inline with a small colored badge indicator.
+- Invoices: Search and filter revamped — filter by Status and Client and free-text Search; filters persist and apply across all pages. Excel export now outputs the saved status.
+- Quotations: Filters (status, client, search) now persist and apply across pages.
+
 ## 🎯 Current Status: Fully Functional Quotations Module
 
 ### ✅ Recently Completed Features
@@ -81,7 +89,7 @@ A comprehensive web-based application for managing production services, quotatio
 
 **Quotations Management** (Primary Module)
 - **Create New**: Navigate to Quotations → New Quotation
-- **List & Filter**: View all quotations with status, client, and search filters
+- **List & Filter**: View all quotations with status, client, and search filters (filters persist and apply across all pages)
 - **Edit/Revision**: Full CRUD operations with automated revision workflow
 - **Preview**: Print-preview modal with professional formatting and print capability
 - **Client History**: Track all quotations for each client
@@ -90,10 +98,12 @@ A comprehensive web-based application for managing production services, quotatio
 
 **Invoice Management** (Fully Functional)
 - **Generate from Quotations**: Automatic invoice creation from current quotations with complete data transfer
-- **Invoice List & Management**: Full invoice table with preview, edit, and export capabilities
+- **Invoice List & Management**: Full invoice table with preview, status change, and export capabilities
+- **Status Workflow**: Three statuses — Pending (default), Cleared, Cancelled — with inline selector and colored badge
+- **Filtering & Search**: Filter by status and client, and free-text search; filters persist across pages and sessions
 - **Professional Preview**: Print-ready modal preview matching quotation formatting
 - **PDF Export**: High-quality PDF generation with proper line item sequence
-- **Excel Export**: Comprehensive invoice reports and data export
+- **Excel Export**: Comprehensive invoice reports and data export (exports actual saved status)
 - **Data Integrity**: Maintains complete bundle/add-on relationships and line sequence
 
 **Services Management**
@@ -117,6 +127,8 @@ A comprehensive web-based application for managing production services, quotatio
 **Customer Management**
 - **Path**: Customers section in main navigation
 - **Features**: Complete customer database with contact management
+- **Excel Import**: Bulk import customers from Excel. Supported columns: Client Name, NTN, Contact Person, Email, Website, Phone (multiple; separate with semicolons), Address, City, Country, Status, Notes. Re-imports are idempotent — unchanged rows are skipped; matching priority is NTN → Email → Client Name.
+- **Field Updates**: “Tax ID” renamed to “NTN” across UI and exports; added Website; supports multiple phone numbers.
 - **Integration**: Seamless integration with quotation forms
 
 **Settings & Configuration**
@@ -134,7 +146,7 @@ A comprehensive web-based application for managing production services, quotatio
 **GenSpark Native Database Tables**
 - **quotations**: 23 fields including templateId for company template association
 - **quotation_lines**: 18 fields mirroring service structure with quotation-specific calculations
-- **invoices**: 21 fields including templateId for company template inheritance
+- **invoices**: 21+ fields including `status` (Pending/Cleared/Cancelled) and `templateId` for company template inheritance
 - **invoice_lines**: Line items for generated invoices
 - **company_templates**: 18 fields for complete multi-company management (NEW)
 - **services**: Service catalog with rates, categories, team roles
@@ -153,10 +165,13 @@ A comprehensive web-based application for managing production services, quotatio
 
 **Recent Critical Fix: Invoice Preview Independence**
 - **Problem**: Invoice preview buttons required visiting quotations page first to work properly
-- **Root Cause**: Invoice preview functions depended on global data (services, bundles, customers) that was only reliably loaded when quotations page was accessed
-- **Solution**: Enhanced `loadInvoicesTable()` function to check for and load missing dependencies automatically
-- **Implementation**: Added conditional data loading and global function exposure to ensure invoice functionality is completely independent
-- **Files Modified**: `js/invoices.js`, `js/app.js`, `js/pdf-globals.js`, `js/excel-globals.js`, `index.html`
+- **Root Cause**: The invoice and quotation preview modals were nested inside the hidden quotations page container; when navigating directly to invoices, the hidden ancestor prevented the modal from showing. There was also implicit reliance on data that might not have been loaded yet.
+- **Solution**: Moved both preview modals to the global root of the DOM (outside page containers), and added a runtime guard that re-parents the invoice/quotation modals to `document.body` if ever found under a hidden page. Retained dependency checks to load services/bundles/customers/templates when needed.
+- **Implementation**:
+  - Relocated `#invoice-preview-modal` and `#quotation-preview-modal` out of `#page-quotations` into a global section at the bottom of `index.html`.
+  - Added re-parenting safety in `showInvoicePreview` and `showQuotationPreview` to ensure independence from page visibility state.
+  - Minor cleanup in `previewInvoice` to remove duplicate dependency checks.
+- **Files Modified**: `index.html`, `js/invoices.js`, `js/quotations.js`
 
 **Frontend Technologies**
 - **Framework**: Vanilla JavaScript with modular architecture
@@ -221,6 +236,7 @@ A comprehensive web-based application for managing production services, quotatio
 
 **Data Import/Export Capabilities**
 - Excel templates for bulk service imports
+- Customer Excel import with NTN, Website, and multiple phone numbers; idempotent re-imports (skips unchanged)
 - Comprehensive Excel reports with analytics
 - Professional PDF generation for client presentation
 - Full data backup and restore functionality
@@ -354,3 +370,9 @@ The system is now **production-ready** with a complete quotation-to-invoice work
 ---
 
 **Last Updated**: October 2025 - Quotation Module Transformation Complete
+
+## Additional Fixes
+
+- Bundles: Fixed "Bundle Unit" dropdown showing empty options in create/edit. Units now load reliably and the existing selection is restored when editing.
+- Services: Added multi-selection with a master checkbox and bulk delete on the Services page.
+- Services Import (Excel): Now idempotent per Service Code � updates changed rows, skips unchanged.

@@ -4,7 +4,7 @@
     "companyName": "Digital Next",
     "companyPhone": "021 34166154",
     "companyEmail": "info@digitalnext.co",
-    "companyLogo": "",
+    "companyLogo": "/assets/dn-logo.png",
     "companyAddress": "C-155 Block 2, Kehkashan,\nClifton, 75600, Karachi",
     "defaultCurrency": "PKR",
     "taxRate": 0.15,

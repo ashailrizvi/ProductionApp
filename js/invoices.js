@@ -143,7 +143,7 @@ async function loadInvoicesTable(page = 1) {
             `;
         }
         
-        // Fetch full list once, then slice locally for pagination (more robust)
+        // Fetch full list once, then filter and slice locally for pagination
         const response = await fetch('tables/invoices');
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -156,12 +156,46 @@ async function loadInvoicesTable(page = 1) {
         }
         const allInvoices = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
 
+        // Load persisted filter values and sync inputs
+        const saved = JSON.parse(localStorage.getItem('invoiceFilters') || '{}');
+        const searchInput = document.getElementById('invoice-search');
+        const statusFilterSel = document.getElementById('invoice-status-filter');
+        const clientFilterSel = document.getElementById('invoice-client-filter');
+        if (searchInput && saved.search != null) searchInput.value = saved.search;
+        if (statusFilterSel && saved.status != null) statusFilterSel.value = saved.status;
+        if (clientFilterSel && saved.client != null) clientFilterSel.value = saved.client;
+
+        // Apply filters across all pages
+        const searchFilter = (searchInput?.value || '').toLowerCase();
+        const statusFilter = (statusFilterSel?.value || '').toLowerCase();
+        const clientFilter = (clientFilterSel?.value || '').toLowerCase();
+        const filteredInvoices = allInvoices.filter(inv => {
+            const status = (inv.status || 'Pending').toLowerCase();
+            const client = (inv.clientName || '').toLowerCase();
+            const rowText = [inv.number, inv.clientName, inv.projectPo, inv.currency]
+                .map(v => (v || '').toString().toLowerCase()).join(' ');
+            const statusMatch = !statusFilter || status.includes(statusFilter);
+            const clientMatch = !clientFilter || client.includes(clientFilter);
+            const searchMatch = !searchFilter || rowText.includes(searchFilter);
+            return statusMatch && clientMatch && searchMatch;
+        });
+
+        // Sort: most recent first; Cleared/Cancelled moved to bottom
+        const sortedInvoices = filteredInvoices.slice().sort((a, b) => {
+            const aCleared = ['cleared', 'cancelled'].includes((a.status || '').toLowerCase());
+            const bCleared = ['cleared', 'cancelled'].includes((b.status || '').toLowerCase());
+            if (aCleared !== bCleared) return aCleared ? 1 : -1; // non-cleared first
+            const da = new Date(a.issueDate || a.dueDate || 0).getTime();
+            const db = new Date(b.issueDate || b.dueDate || 0).getTime();
+            return db - da; // recent first within group
+        });
+
         // Update pagination state using local slice
-        invoicesTotalItems = allInvoices.length;
+        invoicesTotalItems = sortedInvoices.length;
         invoicesTotalPages = Math.max(1, Math.ceil(invoicesTotalItems / invoicesPerPage));
         invoicesCurrentPage = Math.min(page, invoicesTotalPages);
         const start = (invoicesCurrentPage - 1) * invoicesPerPage;
-        const invoices = allInvoices.slice(start, start + invoicesPerPage);
+        const invoices = sortedInvoices.slice(start, start + invoicesPerPage);
         tbody.innerHTML = '';
         
         if (invoices.length === 0) {
@@ -226,6 +260,8 @@ async function loadInvoicesTable(page = 1) {
             const row = document.createElement('tr');
             row.className = 'hover:bg-gray-700';
             
+            const statusVal = (invoice.status || 'Pending');
+            const statusColor = statusVal === 'Cleared' ? 'bg-green-500' : (statusVal === 'Cancelled' ? 'bg-red-500' : 'bg-yellow-500');
             row.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm font-medium text-white">${invoice.invoiceNumber || invoice.number}</div>
@@ -244,7 +280,15 @@ async function loadInvoicesTable(page = 1) {
                     <div class="text-sm font-medium text-white">${fmtCurrency(grandTotal, invoice.currency)}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">Active</span>
+                    <div class="flex items-center gap-2">
+                        <span class="status-dot inline-block w-2.5 h-2.5 rounded-full ${statusColor}"></span>
+                        <select class="bg-gray-700 border border-gray-600 text-white text-xs rounded px-2 py-1"
+                                onchange="(function(sel){ updateInvoiceStatus('${invoice.id}', sel.value); try{updateInvoiceStatusDot(sel);}catch(e){} })(this)">
+                            <option value="Pending" ${statusVal==='Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Cleared" ${statusVal==='Cleared' ? 'selected' : ''}>Cleared</option>
+                            <option value="Cancelled" ${statusVal==='Cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                    </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button class="preview-btn text-purple-400 hover:text-purple-300 mr-3" 
@@ -267,6 +311,53 @@ async function loadInvoicesTable(page = 1) {
         
         // Update pagination controls
         updateInvoicesPagination();
+
+        // Wire up filters and update client filter options for current page
+        try {
+            updateInvoiceFilters(invoices);
+            const searchInput = document.getElementById('invoice-search');
+            const statusFilter = document.getElementById('invoice-status-filter');
+            const clientFilter = document.getElementById('invoice-client-filter');
+            if (searchInput && !searchInput.hasAttribute('data-listener-added')) {
+                searchInput.addEventListener('input', () => {
+                    const filters = {
+                        search: document.getElementById('invoice-search')?.value || '',
+                        status: document.getElementById('invoice-status-filter')?.value || '',
+                        client: document.getElementById('invoice-client-filter')?.value || ''
+                    };
+                    localStorage.setItem('invoiceFilters', JSON.stringify(filters));
+                    loadInvoicesTable(1);
+                });
+                searchInput.setAttribute('data-listener-added', 'true');
+            }
+            if (statusFilter && !statusFilter.hasAttribute('data-listener-added')) {
+                statusFilter.addEventListener('change', () => {
+                    const filters = {
+                        search: document.getElementById('invoice-search')?.value || '',
+                        status: document.getElementById('invoice-status-filter')?.value || '',
+                        client: document.getElementById('invoice-client-filter')?.value || ''
+                    };
+                    localStorage.setItem('invoiceFilters', JSON.stringify(filters));
+                    loadInvoicesTable(1);
+                });
+                statusFilter.setAttribute('data-listener-added', 'true');
+            }
+            if (clientFilter && !clientFilter.hasAttribute('data-listener-added')) {
+                clientFilter.addEventListener('change', () => {
+                    const filters = {
+                        search: document.getElementById('invoice-search')?.value || '',
+                        status: document.getElementById('invoice-status-filter')?.value || '',
+                        client: document.getElementById('invoice-client-filter')?.value || ''
+                    };
+                    localStorage.setItem('invoiceFilters', JSON.stringify(filters));
+                    loadInvoicesTable(1);
+                });
+                clientFilter.setAttribute('data-listener-added', 'true');
+            }
+            // No need to locally hide rows now; loadInvoicesTable applies filters across all pages
+        } catch (e) {
+            console.warn('Invoices filters setup warning:', e?.message || e);
+        }
         
         // Add event listeners to invoice action buttons
         setTimeout(() => {
@@ -466,7 +557,7 @@ async function updateLineService(index, serviceId) {
                 lineBuffer: 0,
                 quantity: 1,
                 unit: item.unit,
-                isOptional: item.isOptional,
+                isOptional: false,
                 adjustedRate: 0,
                 lineTotal: 0
             };
@@ -483,7 +574,7 @@ async function updateLineService(index, serviceId) {
         line.category = service.category;
         line.rate = service.baseRate || 0;
         line.unit = service.unit;
-        line.isOptional = service.isOptional;
+        line.isOptional = false;
         
         // Get bundle cost if applicable
         if (!expandBundles && isBundle(serviceId)) {
@@ -615,6 +706,8 @@ function initializeInvoiceFormListeners() {
             // Create new invoice
             invoiceData.id = generateId();
             currentInvoiceId = invoiceData.id;
+            // Default status for new invoice
+            invoiceData.status = 'Pending';
             response = await fetch('tables/invoices', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -720,6 +813,44 @@ async function deleteInvoice(invoiceId) {
     }
 }
 
+// Update invoice status (Pending | Cleared | Cancelled)
+async function updateInvoiceStatus(invoiceId, newStatus) {
+    try {
+        showLoading();
+        // Load existing invoice to avoid overwriting fields
+        const getRes = await fetch(`tables/invoices/${invoiceId}`);
+        if (!getRes.ok) {
+            showToast('Failed to load invoice for status update', 'error');
+            return;
+        }
+        const existing = await getRes.json();
+        const current = existing?.status || 'Pending';
+        if (current === newStatus) {
+            showToast('Status unchanged', 'info');
+            return;
+        }
+        const payload = { ...existing, status: newStatus };
+        const putRes = await fetch(`tables/invoices/${invoiceId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!putRes.ok) {
+            showToast('Failed to update invoice status', 'error');
+            return;
+        }
+        showToast('Invoice status updated', 'success');
+        // Refresh current table page
+        try { await loadInvoicesTable(invoicesCurrentPage || 1); } catch {}
+        try { filterInvoices(); } catch {}
+    } catch (err) {
+        console.error('Status update failed:', err);
+        showToast('Status update failed', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
 // Edit invoice functionality removed - invoices should not be edited after generation
 
 // Refresh service dropdowns in all line items
@@ -792,16 +923,6 @@ async function previewInvoice(invoiceId) {
         if ((!window.companyTemplates || window.companyTemplates.length === 0) && typeof loadCompanyTemplates === 'function') {
             try { await loadCompanyTemplates(); } catch {}
         }
-        // Ensure dependencies are available if page was opened directly
-        if ((!window.services || window.services.length === 0) && typeof loadServices === 'function') {
-            try { await loadServices(); window.services = window.services || services || []; } catch {}
-        }
-        if ((!window.bundles || window.bundles.length === 0) && typeof loadBundles === 'function') {
-            try { await loadBundles(); window.bundles = window.bundles || bundles || []; } catch {}
-        }
-        if ((!window.companyTemplates || window.companyTemplates.length === 0) && typeof loadCompanyTemplates === 'function') {
-            try { await loadCompanyTemplates(); } catch {}
-        }
         
         // Load invoice data
         const invoiceResponse = await fetch(`tables/invoices/${invoiceId}`);
@@ -864,7 +985,10 @@ async function previewInvoice(invoiceId) {
         
         const grandTotal = bufferedSubtotal + taxAmount - discountAmount;
         
-        // Hide loader before showing modal\n        if (typeof hideLoading === 'function') { try { hideLoading(); } catch {} }\n        // Show preview modal\n        showInvoicePreview(invoice, lines, {
+        // Hide loader before showing modal
+        if (typeof hideLoading === 'function') { try { hideLoading(); } catch {} }
+        // Show preview modal
+        showInvoicePreview(invoice, lines, {
             subtotal,
             headerBuffer: 0, // No separate buffer since it's already included
             bufferedSubtotal, 
@@ -883,8 +1007,55 @@ async function previewInvoice(invoiceId) {
 
 // Show invoice preview modal
 function showInvoicePreview(invoice, lines, totals, template = null) {
-    const modal = document.getElementById('invoice-preview-modal');
-    const content = document.getElementById('invoice-preview-content');
+    let modal = document.getElementById('invoice-preview-modal');
+    let content = document.getElementById('invoice-preview-content');
+    // If the modal exists but is inside a hidden page container, re-parent it to body
+    try {
+        if (modal) {
+            const hiddenAncestor = modal.closest('.page-content.hidden');
+            if (hiddenAncestor) {
+                document.body.appendChild(modal);
+            }
+        }
+    } catch (e) {
+        console.warn('Invoice preview modal re-parent check failed:', e?.message || e);
+    }
+    // Self-healing: create modal scaffold if missing
+    if (!modal || !content) {
+        try {
+            if (modal && modal.parentNode) modal.parentNode.removeChild(modal);
+            modal = document.createElement('div');
+            modal.id = 'invoice-preview-modal';
+            modal.className = 'fixed inset-0 bg-gray-900 bg-opacity-75 hidden flex items-center justify-center p-4';
+            modal.style.zIndex = 9999;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto print:max-h-none print:overflow-visible';
+            const header = document.createElement('div');
+            header.className = 'p-8 print:p-0';
+            header.innerHTML = `
+                <div class="flex justify-between items-center mb-6 print:hidden">
+                    <h3 class="text-xl font-semibold text-gray-800">Invoice Preview</h3>
+                    <div class="flex space-x-3">
+                        <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
+                            <i class="fas fa-print mr-2"></i>Print
+                        </button>
+                        <button onclick="closeInvoicePreview()" class="text-gray-400 hover:text-gray-600 bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>`;
+            content = document.createElement('div');
+            content.id = 'invoice-preview-content';
+            content.className = 'space-y-6';
+            header.appendChild(content);
+            wrapper.appendChild(header);
+            modal.appendChild(wrapper);
+            document.body.appendChild(modal);
+        } catch (err) {
+            console.error('Failed to create invoice preview modal scaffold:', err);
+            return;
+        }
+    }
     
     if (!modal) {
         console.error('❌ Invoice preview modal not found in DOM');
@@ -1164,6 +1335,69 @@ function showInvoicePreview(invoice, lines, totals, template = null) {
 function closeInvoicePreview() {
     const modal = document.getElementById('invoice-preview-modal');
     modal.classList.add('hidden');
+}
+
+// Update status badge color next to select
+function updateInvoiceStatusDot(selectEl) {
+    try {
+        const container = selectEl.closest('td');
+        const dot = container ? container.querySelector('.status-dot') : null;
+        if (!dot) return;
+        dot.classList.remove('bg-green-500', 'bg-red-500', 'bg-yellow-500');
+        const v = (selectEl.value || '').toLowerCase();
+        if (v === 'cleared') dot.classList.add('bg-green-500');
+        else if (v === 'cancelled') dot.classList.add('bg-red-500');
+        else dot.classList.add('bg-yellow-500');
+    } catch {}
+}
+
+// Update invoice filters (client dropdown)
+function updateInvoiceFilters(invoices) {
+    try {
+        const clientFilter = document.getElementById('invoice-client-filter');
+        if (!clientFilter) return;
+        const uniqueClients = [...new Set((invoices || []).map(inv => inv.clientName).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+        const current = clientFilter.value || '';
+        clientFilter.innerHTML = '<option value="">All Clients</option>';
+        uniqueClients.forEach(client => {
+            const opt = document.createElement('option');
+            opt.value = client;
+            opt.textContent = client;
+            clientFilter.appendChild(opt);
+        });
+        // Try to retain previous selection
+        if ([...clientFilter.options].some(o => o.value === current)) {
+            clientFilter.value = current;
+        }
+    } catch (e) {
+        console.warn('Failed updating invoice filters:', e?.message || e);
+    }
+}
+
+// Apply filters to invoice rows
+function filterInvoices() {
+    const statusFilter = (document.getElementById('invoice-status-filter')?.value || '').toLowerCase();
+    const clientFilter = (document.getElementById('invoice-client-filter')?.value || '').toLowerCase();
+    const searchFilter = (document.getElementById('invoice-search')?.value || '').toLowerCase();
+
+    const rows = document.querySelectorAll('#invoices-table tr');
+    rows.forEach(row => {
+        if (!row || row.children.length < 7) return;
+        // Status is a select in column 6
+        let status = '';
+        try {
+            const statusSel = row.querySelector('td:nth-child(6) select');
+            status = (statusSel?.value || '').toLowerCase();
+        } catch {}
+        const clientText = (row.children[1]?.textContent || '').toLowerCase();
+        const searchText = (row.textContent || '').toLowerCase();
+
+        const statusMatch = !statusFilter || status.includes(statusFilter);
+        const clientMatch = !clientFilter || clientText.includes(clientFilter);
+        const searchMatch = !searchFilter || searchText.includes(searchFilter);
+
+        row.style.display = (statusMatch && clientMatch && searchMatch) ? '' : 'none';
+    });
 }
 
 // Preview functions made globally accessible in loadInvoicesTable

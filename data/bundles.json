@@ -1,82 +1,101 @@
 [
   {
-    "bundleCode": "BNDL-DVC-IND-1D",
-    "name": "DVC Indoor Shoot – 1 Day",
-    "parentServiceId": null,
-    "description": "Studio/indoor setup",
-    "id": "b6407bce-74d9-4934-a367-5214348c00ad",
-    "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
-    "gs_table_name": "bundles",
-    "created_at": 1760712565858,
-    "updated_at": 1760807716320,
-    "_rid": "pBtjAL8RWCf3WyYAAAAAAA==",
-    "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCf3WyYAAAAAAA==/",
-    "_etag": "\"7e04e11b-0000-0800-0000-68f3cb240000\"",
-    "_attachments": "attachments/",
-    "_ts": 1760807716
-  },
-  {
-    "bundleCode": "BNDL-EVENT-1DAY",
-    "name": "Event Shoot – 1 Day",
-    "parentServiceId": null,
-    "description": "",
-    "id": "58132a15-c809-4d9c-b7d1-bb290da19b04",
-    "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
-    "gs_table_name": "bundles",
-    "created_at": 1760712563149,
-    "updated_at": 1760712563149,
-    "_rid": "pBtjAL8RWCf1WyYAAAAAAA==",
-    "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCf1WyYAAAAAAA==/",
-    "_etag": "\"4304ccb0-0000-0800-0000-68f257730000\"",
-    "_attachments": "attachments/",
-    "_ts": 1760712563
-  },
-  {
-    "bundleCode": "BNDL-POST-STD",
-    "name": "Post-Production – Standard",
-    "parentServiceId": null,
-    "description": "",
-    "id": "64c8fb7a-f32b-4f2b-8a31-74a3ced470f5",
-    "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
-    "gs_table_name": "bundles",
-    "created_at": 1760712562166,
-    "updated_at": 1760712562166,
-    "_rid": "pBtjAL8RWCfzWyYAAAAAAA==",
-    "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCfzWyYAAAAAAA==/",
-    "_etag": "\"4304a6b0-0000-0800-0000-68f257720000\"",
-    "_attachments": "attachments/",
-    "_ts": 1760712562
-  },
-  {
     "bundleCode": "BNDL-REEL-EDIT",
     "name": "Instagram Reel – Edit Only",
     "parentServiceId": null,
     "description": "",
-    "id": "1383f8b3-cbce-4bdd-ab31-f5897e54a3cc",
-    "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
-    "gs_table_name": "bundles",
-    "created_at": 1760712561129,
-    "updated_at": 1760712561129,
-    "_rid": "pBtjAL8RWCfyWyYAAAAAAA==",
-    "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCfyWyYAAAAAAA==/",
-    "_etag": "\"430471b0-0000-0800-0000-68f257710000\"",
-    "_attachments": "attachments/",
-    "_ts": 1760712561
+    "id": "15"
   },
   {
-    "bundleCode": "BNDL-REEL-SHOOT",
+    "bundleCode": "BNDL-REEL-SHOOTEDIT",
     "name": "Instagram Reel – Shoot + Edit",
     "parentServiceId": null,
-    "description": "Instagram reel shoot and post-production.",
-    "id": "f4e43d79-0658-4b37-9974-9e4df7fdbe0f",
-    "gs_project_id": "9d47194e-8b79-4d85-b1d4-896740aa7dee",
-    "gs_table_name": "bundles",
-    "created_at": 1760712560189,
-    "updated_at": 1760717156937,
-    "_rid": "pBtjAL8RWCfxWyYAAAAAAA==",
-    "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCfxWyYAAAAAAA==/",
-    "_etag": "\"4704f714-0000-0800-0000-68f269640000\"",
-    "_attachments": "attachments/",
-    "_ts": 1760717156
+    "description": "",
+    "id": "16"
+  },
+  {
+    "bundleCode": "BNDL-INTVW-1CAM",
+    "name": "Corporate Interview – 1 Cam",
+    "parentServiceId": null,
+    "description": "",
+    "id": "17"
+  },
+  {
+    "bundleCode": "BNDL-INTVW-2CAM",
+    "name": "Corporate Interview – 2 Cam",
+    "parentServiceId": null,
+    "description": "",
+    "id": "18"
+  },
+  {
+    "bundleCode": "BNDL-PROD-TABLETOP",
+    "name": "Product Tabletop – Photo + Video",
+    "parentServiceId": null,
+    "description": "",
+    "id": "19"
+  },
+  {
+    "bundleCode": "BNDL-EVENT-1DAY-PVH",
+    "name": "Event Coverage – 1 Day (Photo+Video+Highlight)",
+    "parentServiceId": null,
+    "description": "",
+    "id": "20"
+  },
+  {
+    "bundleCode": "BNDL-GREENSCREEN",
+    "name": "Studio Green Screen – Shoot + Key",
+    "parentServiceId": null,
+    "description": "",
+    "id": "21"
+  },
+  {
+    "bundleCode": "BNDL-ANIM-2D",
+    "name": "2D Explainer – Script to Screen",
+    "parentServiceId": null,
+    "description": "",
+    "id": "22"
+  },
+  {
+    "bundleCode": "BNDL-ANIM-3D",
+    "name": "3D Product Animation – Short",
+    "parentServiceId": null,
+    "description": "",
+    "id": "23"
+  },
+  {
+    "bundleCode": "BNDL-LIVE-1CAM",
+    "name": "Live Streaming – 1 Cam",
+    "parentServiceId": null,
+    "description": "",
+    "id": "24"
+  },
+  {
+    "bundleCode": "BNDL-DVC-IND-1D",
+    "name": "DVC Indoor Shoot – 1 Day",
+    "parentServiceId": null,
+    "description": "",
+    "id": "25",
+    "unit": "per day"
+  },
+  {
+    "bundleCode": "BNDL-REALEST-1D",
+    "name": "Real Estate Walkthrough – 1 Day",
+    "parentServiceId": null,
+    "description": "",
+    "id": "26"
+  },
+  {
+    "bundleCode": "BNDL-PODCAST-2CAM",
+    "name": "Podcast Video – 2 Cam",
+    "parentServiceId": null,
+    "description": "",
+    "id": "27"
+  },
+  {
+    "bundleCode": "BNDL-TRAINING-VID",
+    "name": "Corporate Training Video",
+    "parentServiceId": null,
+    "description": "",
+    "id": "28"
   }
 ]

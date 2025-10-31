@@ -104,22 +104,19 @@ async function showQuotationBuilder() {
         }
     }
     
-    // Ensure bundles are loaded
-    if ((!bundles || bundles.length === 0) && (!window.bundles || window.bundles.length === 0)) {
-        if (typeof loadBundles === 'function') {
-            await loadBundles();
-        } else {
-            // Try loading bundles directly from API
-            try {
-                const response = await fetch('tables/bundles');
-                if (response.ok) {
-                    const data = await response.json();
-                    bundles = data.data || [];
-                    window.bundles = bundles;
-                }
-            } catch (error) {
-                console.error('Failed to load bundles from API:', error);
+    // Ensure bundles are freshly loaded every time builder opens (avoid stale cache)
+    if (typeof loadBundles === 'function') {
+        await loadBundles();
+    } else {
+        // Try loading bundles directly from API
+        try {
+            const response = await fetch('tables/bundles');
+            if (response.ok) {
+                const data = await response.json();
+                window.bundles = data.data || [];
             }
+        } catch (error) {
+            console.error('Failed to load bundles from API:', error);
         }
     }
     
@@ -210,7 +207,7 @@ async function checkAndExpireQuotations(quotations) {
     return updatedQuotations;
 }
 
-// Load quotations table
+// Load quotations table (client-side filter + pagination)
 let isLoadingQuotations = false; // Prevent concurrent calls
 async function loadQuotationsTable(page = 1) {
     // Prevent concurrent loading
@@ -242,25 +239,58 @@ async function loadQuotationsTable(page = 1) {
             `;
         }
         
-        // Fetch paginated quotations (sorted by most recent first)  
-        const url = `tables/quotations?page=${page}&limit=${quotationsPerPage}`;
-        const response = await fetch(url);
+        // Fetch all quotations once, then filter and slice locally (sorted by most recent first)
+        const response = await fetch('tables/quotations');
         const data = await response.json();
-        let quotations = data.data || [];
-        
-        // Update pagination state
-        quotationsCurrentPage = data.page || page;
-        quotationsTotalItems = data.total || 0;
-        quotationsTotalPages = Math.ceil(quotationsTotalItems / quotationsPerPage);
-        
-        
-        // Auto-expire quotations that are past their validUntil date
+        const allQuotations = data.data || [];
+
+        // Restore persisted filters and sync inputs
+        const saved = JSON.parse(localStorage.getItem('quotationFilters') || '{}');
+        const statusSel = document.getElementById('status-filter');
+        const clientSel = document.getElementById('client-filter');
+        const searchInput = document.getElementById('search-quotations');
+        if (statusSel && saved.status != null) statusSel.value = saved.status;
+        if (clientSel && saved.client != null) clientSel.value = saved.client;
+        if (searchInput && saved.search != null) searchInput.value = saved.search;
+
+        const statusFilter = (statusSel?.value || '').toLowerCase();
+        const clientFilter = (clientSel?.value || '').toLowerCase();
+        const searchFilter = (searchInput?.value || '').toLowerCase();
+
+        let quotations = allQuotations.filter(q => {
+            const status = (q.status || '').toLowerCase();
+            const client = (q.clientName || '').toLowerCase();
+            const rowText = [q.number, q.clientName, q.projectTitle, q.currency]
+                .map(v => (v || '').toString().toLowerCase()).join(' ');
+            const statusMatch = !statusFilter || status.includes(statusFilter);
+            const clientMatch = !clientFilter || client.includes(clientFilter);
+            const searchMatch = !searchFilter || rowText.includes(searchFilter);
+            return statusMatch && clientMatch && searchMatch;
+        });
+
+        // Auto-expire quotations that are past their validUntil date before paginating
         quotations = await checkAndExpireQuotations(quotations);
-        
+
+        // Sort most recent first (by issueDate desc; fallback to validUntil)
+        quotations.sort((a, b) => {
+            const da = new Date(a.issueDate || a.validUntil || 0).getTime();
+            const db = new Date(b.issueDate || b.validUntil || 0).getTime();
+            return db - da;
+        });
+
+        // Update pagination state using filtered results
+        quotationsTotalItems = quotations.length;
+        quotationsTotalPages = Math.max(1, Math.ceil(quotationsTotalItems / quotationsPerPage));
+        quotationsCurrentPage = Math.min(page, quotationsTotalPages);
+
+        // Slice to current page
+        const startIndex = (quotationsCurrentPage - 1) * quotationsPerPage;
+        const pageQuotations = quotations.slice(startIndex, startIndex + quotationsPerPage);
+
         // Clear table for fresh content
         tbody.innerHTML = '';
         
-        if (quotations.length === 0) {
+        if (pageQuotations.length === 0) {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="7" class="px-6 py-12 text-center text-gray-500">
@@ -276,7 +306,7 @@ async function loadQuotationsTable(page = 1) {
         }
         
         // Calculate totals for each quotation
-        for (const quotation of quotations) {
+        for (const quotation of pageQuotations) {
             // Check if row already exists (duplicate prevention)
             const existingRow = tbody.querySelector(`tr[data-quotation-id="${quotation.id}"]`);
             if (existingRow) {
@@ -304,14 +334,13 @@ async function loadQuotationsTable(page = 1) {
             
             const grandTotal = bufferedSubtotal + taxAmount - discountAmount;
             
-            // Status badge styling
-            const statusBadges = {
-                'Current': 'bg-green-600 text-green-200',
-                'Revised': 'bg-purple-600 text-purple-200',
-                'Expired': 'bg-orange-600 text-orange-200'
-            };
-            
-            const statusClass = statusBadges[quotation.status] || 'bg-gray-600 text-gray-200';
+            // Status badge styling based on invoice linkage
+            // Green: invoice generated; Yellow: not generated; Red: revised/expired
+            const statusClass = (
+                (quotation.status === 'Revised' || quotation.status === 'Expired')
+                    ? 'bg-red-600 text-red-200'
+                    : (quotation.invoiceGenerated ? 'bg-green-600 text-green-200' : 'bg-yellow-600 text-yellow-200')
+            );
             
             const row = document.createElement('tr');
             row.className = 'hover:bg-gray-700';
@@ -369,8 +398,20 @@ async function loadQuotationsTable(page = 1) {
             tbody.appendChild(row);
         }
         
-        // Update filter dropdowns
-        updateQuotationFilters(quotations);
+        // Update filter dropdowns based on all filtered quotations
+        updateQuotationFilters(allQuotations);
+        // Wire listeners once and persist filters
+        try {
+            const bindOnce = (el, type, handler) => {
+                if (el && !el.hasAttribute('data-listener-added')) {
+                    el.addEventListener(type, handler);
+                    el.setAttribute('data-listener-added', 'true');
+                }
+            };
+            bindOnce(statusSel, 'change', () => { persistQuotationFilters(); loadQuotationsTable(1); });
+            bindOnce(clientSel, 'change', () => { persistQuotationFilters(); loadQuotationsTable(1); });
+            bindOnce(searchInput, 'input', () => { persistQuotationFilters(); loadQuotationsTable(1); });
+        } catch {}
         
         // Update pagination controls
         updateQuotationsPagination();
@@ -398,31 +439,17 @@ function updateQuotationFilters(quotations) {
     });
 }
 
-// Filter quotations
+// Persist quotation filters and trigger reload (used by UI onchange attributes)
 function filterQuotations() {
-    const statusFilter = document.getElementById('status-filter').value.toLowerCase();
-    const clientFilter = document.getElementById('client-filter').value.toLowerCase();
-    const searchFilter = document.getElementById('search-quotations').value.toLowerCase();
-    
-    const rows = document.querySelectorAll('#quotations-table tr');
-    
-    rows.forEach(row => {
-        if (row.children.length < 7) return; // Skip empty row
-        
-        const status = row.children[4].textContent.toLowerCase();
-        const client = row.children[1].textContent.toLowerCase();
-        const searchText = row.textContent.toLowerCase();
-        
-        const statusMatch = !statusFilter || status.includes(statusFilter);
-        const clientMatch = !clientFilter || client.includes(clientFilter);
-        const searchMatch = !searchFilter || searchText.includes(searchFilter);
-        
-        if (statusMatch && clientMatch && searchMatch) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
+    persistQuotationFilters();
+    loadQuotationsTable(1);
+}
+
+function persistQuotationFilters() {
+    const status = document.getElementById('status-filter')?.value || '';
+    const client = document.getElementById('client-filter')?.value || '';
+    const search = document.getElementById('search-quotations')?.value || '';
+    localStorage.setItem('quotationFilters', JSON.stringify({ status, client, search }));
 }
 
 // Customer dropdown functions for quotations
@@ -583,8 +610,10 @@ function updateQuotationLinesTableInternal(tbody) {
             
             if (availableBundles && availableBundles.length > 0) {
                 availableBundles.forEach(bundle => {
-                    const selected = bundle.id === line.serviceId ? 'selected' : '';
-                    dropdownOptions += `<option value="${bundle.id}" ${selected} data-type="bundle">${bundle.bundleCode} - ${bundle.name}</option>`;
+                    const selected = (bundle.id === (line.bundleId || line.serviceId)) ? 'selected' : '';
+                    const desc = (bundle.description || '').toString().trim();
+                    const label = `${bundle.name}${desc ? ' - ' + desc : ''}`;
+                    dropdownOptions += `<option value="${bundle.id}" ${selected} data-type="bundle">${label}</option>`;
                 });
             } else {
                 console.warn('No bundles available for dropdown');
@@ -599,7 +628,9 @@ function updateQuotationLinesTableInternal(tbody) {
             if (availableServices && availableServices.length > 0) {
                 availableServices.forEach(service => {
                     const selected = service.id === line.serviceId ? 'selected' : '';
-                    dropdownOptions += `<option value="${service.id}" ${selected} data-type="service">${service.serviceCode || service.name} - ${service.name}</option>`;
+                    const desc = (service.description || '').toString().trim();
+                    const label = `${service.name}${desc ? ' — ' + desc : ''}`;
+                    dropdownOptions += `<option value="${service.id}" ${selected} data-type="service">${label}</option>`;
                 });
             } else {
                 console.warn('No services available for dropdown');
@@ -614,6 +645,32 @@ function updateQuotationLinesTableInternal(tbody) {
             '<span class="inline-block bg-blue-600 text-white text-xs px-2 py-1 rounded-full ml-2">FROM: ' + line.bundleCode + '</span>' : 
             '';
         
+        // Build optional components customize UI for bundle lines
+        let bundleCustomizeHtml = '';
+        if (line.isBundle) {
+            const optionalItems = (line._bundleItems || []).filter(it => it.isOptional);
+            const hasOptional = optionalItems.length > 0;
+            const isOpen = !!line._customizeOpen;
+            let listHtml = '';
+            if (isOpen && hasOptional) {
+                listHtml = optionalItems.map(it => {
+                    const s = it.service || {};
+                    const checked = (line.bundleSelections && typeof line.bundleSelections[it.id] !== 'undefined') ? (line.bundleSelections[it.id] ? 'checked' : '') : (it.defaultSelected ? 'checked' : '');
+                    const unit = s.unit ? ` (${s.unit})` : '';
+                    const qty = it.childQty ? ` x ${it.childQty}` : '';
+                    return `<label class=\"flex items-center space-x-2\">`+
+                        `<input type=\"checkbox\" ${checked} onchange=\"toggleBundleItemSelection(${index}, '${it.id}', this.checked)\" class=\"w-4 h-4 text-primary-600 bg-gray-700 border-gray-600 rounded focus:ring-primary-500\">`+
+                        `<span class=\"text-xs text-gray-200\">${s.name || 'Unknown'}${unit}${qty}</span>`+
+                    `</label>`;
+                }).join('');
+            }
+            bundleCustomizeHtml = `
+                <div class=\"mt-2\">
+                    <button type=\"button\" onclick=\"toggleBundleCustomizePanel(${index})\" class=\"text-xs text-blue-400 hover:text-blue-300\">${isOpen ? 'Hide' : 'Customize'} optional items</button>
+                    ${isOpen ? `<div class=\"mt-2 bg-gray-700 border border-gray-600 rounded p-2 space-y-2\">${listHtml || '<div class=\\"text-xs text-gray-400\\">Loading...</div>'}</div>` : ''}
+                </div>`;
+        }
+
         row.innerHTML = `
             <td class="px-4 py-2">
                 <select onchange="selectQuotationService(${index}, this.value)" 
@@ -621,10 +678,12 @@ function updateQuotationLinesTableInternal(tbody) {
                     ${dropdownOptions}
                 </select>
                 ${bundleIndicator}
-                <input type="text" value="${line.description}" 
+                <input type="text" value="${line.description || ''}" 
                        onchange="updateQuotationLineDescription(${index}, this.value)"
-                       placeholder="Description..."
+                       placeholder="Unit (e.g., per day, 8-hour shift)"
                        class="w-full px-2 py-1 mt-1 bg-gray-700 border border-gray-600 rounded text-white text-sm">
+                ${line.isBundle && line.bundleItemsSummaryHtml ? `<div class=\"mt-2 bg-gray-700 border border-gray-600 rounded p-2 text-xs text-gray-200\">${line.bundleItemsSummaryHtml}</div>` : ''}
+                ${bundleCustomizeHtml}
             </td>
             <td class="px-4 py-2">
                 <input type="number" value="${line.rate}" step="0.01"
@@ -685,15 +744,17 @@ function selectQuotationService(index, serviceId) {
         } else {
             // Show bundle as single line item (DEFAULT BEHAVIOR)
             quotationLines[index].serviceId = serviceId;
+            quotationLines[index].bundleId = bundle.id;
             quotationLines[index].serviceName = bundle.name;
-            quotationLines[index].description = bundle.description || '';
+            // For the description field under the dropdown, show unit-style hint (none for bundle)
+            quotationLines[index].description = '';
             quotationLines[index].rate = 0; // Bundle uses bundleCost, not rate
             quotationLines[index].bundleCost = 0; // Will be calculated
             quotationLines[index].isBundle = true;
             quotationLines[index].bundleCode = bundle.bundleCode;
             
             // Calculate bundle cost and update table
-            calculateBundleCostForQuotation(index, serviceId);
+            calculateBundleCostForQuotation(index, bundle.id);
         }
     } else {
         // This is an individual service selection
@@ -702,7 +763,8 @@ function selectQuotationService(index, serviceId) {
         if (service) {
             quotationLines[index].serviceId = serviceId;
             quotationLines[index].serviceName = service.name || service.serviceName;
-            quotationLines[index].description = service.description || '';
+            // Show the unit in the description box for quick reference
+            quotationLines[index].description = service.unit || '';
             quotationLines[index].rate = service.baseRate || service.rate || 0;
             quotationLines[index].bundleCost = 0;
             quotationLines[index].isBundle = false;
@@ -711,6 +773,59 @@ function selectQuotationService(index, serviceId) {
             updateQuotationLinesTable();
         }
     }
+}
+
+// Ensure bundle items are cached for a specific quotation line (with service refs)
+async function ensureBundleItemsCache(index) {
+    try {
+        const line = quotationLines[index];
+        if (!line || !line.isBundle) return;
+        if (line._bundleItems && Array.isArray(line._bundleItems) && line._bundleItems.length > 0) return;
+        const bundleId = line.bundleId || line.serviceId;
+        const itemsResponse = await fetch(`tables/bundle_items?search=${bundleId}`);
+        const itemsData = await itemsResponse.json();
+        const allItems = (itemsData.data || []).filter(it => it.bundleId === bundleId);
+        const availableServices = window.services || services || [];
+        const augmented = allItems.map(it => ({
+            ...it,
+            isOptional: typeof it.isOptional === 'boolean' ? it.isOptional : false,
+            defaultSelected: typeof it.defaultSelected === 'boolean' ? it.defaultSelected : (it.include !== false),
+            service: availableServices.find(s => s.id === it.childServiceId)
+        }));
+        if (!line.bundleSelections) {
+            line.bundleSelections = {};
+            augmented.forEach(it => {
+                line.bundleSelections[it.id] = it.isOptional ? it.defaultSelected : true;
+            });
+        }
+        line._bundleItems = augmented;
+    } catch (e) {
+        console.warn('ensureBundleItemsCache failed', e?.message || e);
+    }
+}
+
+// Toggle customize panel and lazily load optional items
+function toggleBundleCustomizePanel(index) {
+    const line = quotationLines[index];
+    if (!line) return;
+    if (!line._customizeOpen) {
+        // First open: ensure cache then show
+        ensureBundleItemsCache(index).then(() => {
+            quotationLines[index]._customizeOpen = true;
+            updateQuotationLinesTable();
+        });
+    } else {
+        quotationLines[index]._customizeOpen = false;
+        updateQuotationLinesTable();
+    }
+}
+
+// Toggle selection of an optional bundle item for a specific quotation line
+function toggleBundleItemSelection(index, itemId, checked) {
+    if (!quotationLines[index].bundleSelections) quotationLines[index].bundleSelections = {};
+    quotationLines[index].bundleSelections[itemId] = !!checked;
+    const bundleId = quotationLines[index].bundleId || quotationLines[index].serviceId;
+    calculateBundleCostForQuotation(index, bundleId);
 }
 
 function updateQuotationLineDescription(index, description) {
@@ -741,7 +856,8 @@ async function expandBundleIntoQuotationLines(bundle, startIndex) {
         // Get bundle items
         const itemsResponse = await fetch(`tables/bundle_items?search=${bundle.id}`);
         const itemsData = await itemsResponse.json();
-        const bundleItems = itemsData.data || [];
+        // Filter defensively to only include items for this exact bundle
+        const bundleItems = (itemsData.data || []).filter(it => it.bundleId === bundle.id);
         
         const availableServices = window.services || services || [];
         
@@ -812,17 +928,34 @@ async function calculateBundleCostForQuotation(index, bundleId) {
         // Get bundle items
         const itemsResponse = await fetch(`tables/bundle_items?search=${bundleId}`);
         const itemsData = await itemsResponse.json();
-        const bundleItems = itemsData.data || [];
+        // Filter defensively to only include items for this exact bundle
+        const bundleItems = (itemsData.data || []).filter(it => it.bundleId === bundleId);
         
         let totalBundleCost = 0;
         const availableServices = window.services || services || [];
         
         // Calculate total cost from bundle items
+        const previewLines = [];
         for (const item of bundleItems) {
-            if (item.include) {
+            try {
+                const line = quotationLines[index] || {};
+                if (!line.bundleSelections) line.bundleSelections = {};
+                const isOptional = typeof item.isOptional === 'boolean' ? item.isOptional : false;
+                const defaultSelected = typeof item.defaultSelected === 'boolean' ? item.defaultSelected : (item.include !== false);
+                if (typeof line.bundleSelections[item.id] === 'undefined') {
+                    line.bundleSelections[item.id] = isOptional ? defaultSelected : true;
+                }
+            } catch {}
+            const selected = !!(((quotationLines[index] || {}).bundleSelections) || {})[item.id];
+            if (selected) {
                 const service = availableServices.find(s => s.id === item.childServiceId);
                 if (service && service.baseRate) {
                     totalBundleCost += service.baseRate * (item.childQty || 1);
+                }
+                if (service) {
+                    const unit = service.unit ? ` (${service.unit})` : '';
+                    const qty = item.childQty ? ` × ${item.childQty}` : '';
+                    previewLines.push(`• ${service.name}${unit}${qty}`);
                 }
             }
         }
@@ -830,12 +963,17 @@ async function calculateBundleCostForQuotation(index, bundleId) {
         // Update the quotation line with calculated bundle cost
         quotationLines[index].bundleCost = totalBundleCost;
         quotationLines[index].rate = 0; // Bundle uses bundleCost, not rate
+        // Store a user-only summary of included services to show in builder UI
+        quotationLines[index].bundleItemsSummaryHtml = previewLines.length
+            ? `<div class=\"font-semibold text-gray-100 mb-1\">Included Services</div><div class=\"space-y-1\">${previewLines.map(t => `<div>${t}</div>`).join('')}</div>`
+            : '';
         calculateQuotationLineTotal(index);
         updateQuotationLinesTable();
         
     } catch (error) {
         console.error('Failed to calculate bundle cost:', error);
         quotationLines[index].bundleCost = 0;
+        quotationLines[index].bundleItemsSummaryHtml = '';
         updateQuotationLinesTable();
     }
 }
@@ -946,7 +1084,7 @@ async function handleExpandBundlesChange() {
             if (line.isBundle) {
                 bundleSelections.push({
                     index: index,
-                    bundleId: line.serviceId,
+                    bundleId: line.bundleId || line.serviceId,
                     quantity: line.quantity
                 });
             }
@@ -1215,6 +1353,7 @@ async function saveQuotation() {
                 lineTotal: line.lineTotal,
                 isBundle: line.isBundle || false,
                 fromBundle: line.fromBundle || null,
+                bundleSelections: line.bundleSelections || null,
                 notes: line.notes || '',
                 lineOrder: i + 1  // Add sequence field to maintain order
             };
@@ -1245,6 +1384,9 @@ async function saveQuotation() {
 // Edit quotation
 async function editQuotation(quotationId) {
     try {
+        // Ensure data needed for dropdowns is available
+        try { if (typeof loadServices === 'function') { await loadServices(); } } catch {}
+        try { if (typeof loadBundles === 'function') { await loadBundles(); } } catch {}
         // Load quotation data
         const quotationResponse = await fetch(`tables/quotations/${quotationId}`);
         const quotation = await quotationResponse.json();
@@ -1315,6 +1457,7 @@ async function editQuotation(quotationId) {
             lineTotal: line.lineTotal,
             isBundle: line.isBundle || false,
             fromBundle: line.fromBundle,
+            bundleSelections: line.bundleSelections || null,
             notes: line.notes || '',
             lineOrder: line.lineOrder
         }));
@@ -1333,6 +1476,8 @@ async function editQuotation(quotationId) {
         
         // Update UI
         updateQuotationLinesTable();
+        // Rebuild bundle summaries and cache optional items for bundle lines
+        quotationLines.forEach((ln, i) => { if (ln.isBundle) { try { calculateBundleCostForQuotation(i, ln.bundleId || ln.serviceId); } catch {} } });
         refreshQuoteServiceDropdowns();
         updateQuotationTotals();
         
@@ -1447,6 +1592,17 @@ async function previewQuotation(quotationId) {
 function showQuotationPreview(quotation, lines, totals, template = null) {
     const modal = document.getElementById('quotation-preview-modal');
     const content = document.getElementById('quotation-preview-content');
+    // If the modal exists but is inside a hidden page container, re-parent it to body
+    try {
+        if (modal) {
+            const hiddenAncestor = modal.closest('.page-content.hidden');
+            if (hiddenAncestor) {
+                document.body.appendChild(modal);
+            }
+        }
+    } catch (e) {
+        console.warn('Quotation preview modal re-parent check failed:', e?.message || e);
+    }
     
     // Customer data is stored directly in quotation, no need to lookup
     const customer = {
@@ -1739,17 +1895,12 @@ async function viewClientHistory(clientName) {
             }
             const grandTotal = subtotal + taxAmount - discountAmount;
             
-            const statusBadges = {
-                'Draft': 'bg-gray-600 text-gray-200',
-                'Sent': 'bg-blue-600 text-blue-200',
-                'Under Review': 'bg-yellow-600 text-yellow-200',
-                'Revised': 'bg-purple-600 text-purple-200',
-                'Approved': 'bg-green-600 text-green-200',
-                'Rejected': 'bg-red-600 text-red-200',
-                'Expired': 'bg-orange-600 text-orange-200'
-            };
-            
-            const statusClass = statusBadges[quotation.status] || 'bg-gray-600 text-gray-200';
+            // History badge styling: same rule as table
+            const statusClass = (
+                (quotation.status === 'Revised' || quotation.status === 'Expired')
+                    ? 'bg-red-600 text-red-200'
+                    : (quotation.invoiceGenerated ? 'bg-green-600 text-green-200' : 'bg-yellow-600 text-yellow-200')
+            );
             
             const historyItem = document.createElement('div');
             historyItem.className = 'bg-gray-700 rounded-lg p-4 border-l-4 border-primary-500';

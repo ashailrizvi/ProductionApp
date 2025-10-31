@@ -22,6 +22,12 @@ async function loadSettingsForm() {
         
         // Load company templates - this should populate the table
         await loadCompanyTemplates();
+
+        // Load units list into settings UI and backfill from usage
+        try { if (typeof loadUnits === 'function') await loadUnits(); } catch {}
+        try { await syncUsageUnitsToDb(); } catch {}
+        try { await buildUnitUsageMap(); } catch {}
+        renderUnitsList();
         
         // Ensure the templates table is populated (in case templates were loaded before page was shown)
         if (window.companyTemplates && window.companyTemplates.length > 0) {
@@ -912,4 +918,221 @@ function getCurrentTemplateId() {
     }
     
     return null;
+}
+
+// Units management in Settings
+function renderUnitsList() {
+    try {
+        const container = document.getElementById('units-list');
+        if (!container) return;
+        const dbUnits = (window.units || []).map(u => ({ id: u.id || u.name, name: u.name }));
+        const usageMap = window.__unitUsageMap || {};
+        const usageOnly = Object.keys(usageMap)
+            .filter(n => !dbUnits.some(u => (u.name || '').toLowerCase() === n.toLowerCase()))
+            .map(n => ({ id: '', name: n }));
+        const list = dbUnits.concat(usageOnly).sort((a,b) => a.name.localeCompare(b.name));
+        if (list.length === 0) {
+            container.innerHTML = '<div class="text-gray-300">No units found</div>';
+        } else {
+            container.innerHTML = '<ul class="space-y-1">' + list.map(u => {
+                const key = (u.name || '').toLowerCase();
+                const used = usageMap[key] || 0;
+                const disable = used > 0 ? 'disabled title="In use"' : '';
+                const badge = used > 0 ? `<span class=\"ml-2 text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300\">In use: ${used}</span>` : '';
+                return `
+                <li class=\"flex items-center justify-between bg-gray-800/70 border border-gray-600 rounded px-2 py-1\">
+                    <span>${u.name}${badge}</span>
+                    <button class=\"text-red-400 hover:text-red-300 text-xs disabled:opacity-40\" ${disable} data-unit-id=\"${u.id}\" data-unit-name=\"${u.name}\">Delete</button>
+                </li>`;
+            }).join('') + '</ul>';
+        }
+    } catch (e) { console.warn('renderUnitsList failed', e?.message || e); }
+}
+
+document.getElementById('add-unit-btn')?.addEventListener('click', async function() {
+    const input = document.getElementById('new-unit-input');
+    if (!input) return;
+    const name = (input.value || '').trim();
+    if (!name) { showToast('Enter a unit name', 'warning'); return; }
+    // Prevent duplicates (case-insensitive)
+    const exists = (window.units || []).some(u => (u.name || '').toLowerCase() === name.toLowerCase());
+    if (exists) { showToast('Unit already exists', 'info'); return; }
+    try {
+        showLoading();
+        const unitObj = { id: generateId(), name };
+        let res = await fetch('tables/units', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(unitObj) });
+        if (!res.ok) {
+            // Attempt to initialize units table by loading defaults and syncing usage, then retry once
+            try { if (typeof loadUnits === 'function') await loadUnits(); } catch {}
+            try { if (typeof syncUsageUnitsToDb === 'function') await syncUsageUnitsToDb(); } catch {}
+            res = await fetch('tables/units', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(unitObj) });
+        }
+        if (!res.ok) {
+            const ok = await persistUnitToSettings(name);
+            if (!ok) {
+                const errTxt = await res.text().catch(()=>'');
+                throw new Error(errTxt || 'Failed to add unit');
+            }
+        }
+        try { await loadUnits(); } catch {}
+        try { await buildUnitUsageMap(); } catch {}
+        renderUnitsList();
+        try { refreshUnitDropdowns(); } catch {}
+        input.value = '';
+        showToast('Unit added', 'success');
+    } catch (e) {
+        console.error('Add unit failed:', e);
+        // Fallback to local-only so the UI remains usable
+        window.units = (window.units || []).concat([{ id: generateId(), name }]);
+        try { await buildUnitUsageMap(); } catch {}
+        renderUnitsList();
+        try { refreshUnitDropdowns(); } catch {}
+        showToast('Saved locally; DB add failed', 'warning');
+    } finally {
+        hideLoading();
+    }
+});
+
+// Unit delete handler (event delegation)
+document.getElementById('units-list')?.addEventListener('click', async function(e) {
+    const btn = e.target.closest('button[data-unit-id]');
+    if (!btn) return;
+    const unitId = btn.getAttribute('data-unit-id');
+    const unitName = btn.getAttribute('data-unit-name');
+
+    if (!confirm(`Delete unit "${unitName}"? This cannot be undone.`)) return;
+
+    try {
+        showLoading();
+        // Safety check: ensure not used by any service or bundle
+        await buildUnitUsageMap();
+        const usageMap = window.__unitUsageMap || {};
+        const inUse = usageMap[(unitName || '').toLowerCase()] || 0;
+
+        if (inUse > 0) {
+            showToast(`Cannot delete. Unit in use by ${inUse} item(s).`, 'warning');
+            return;
+        }
+
+        // Try delete from DB
+        let ok = false;
+        if (unitId) {
+            try {
+                const del = await fetch(`tables/units/${unitId}`, { method: 'DELETE' });
+                ok = del.ok;
+            } catch {}
+        }
+
+        if (!ok) {
+            // Fallback: filter out locally and persist best-effort by re-posting rest
+            window.units = (window.units || []).filter(u => (u.id || u.name) !== unitId);
+        } else {
+            // Reload authoritative list
+            try { if (typeof loadUnits === 'function') await loadUnits(); } catch {}
+        }
+
+        await buildUnitUsageMap();
+        renderUnitsList();
+        refreshUnitDropdowns();
+        showToast('Unit deleted', 'success');
+    } catch (err) {
+        console.error('Delete unit failed:', err);
+        showToast('Failed to delete unit', 'error');
+    } finally {
+        hideLoading();
+    }
+});
+
+function refreshUnitDropdowns() {
+    try {
+        // Services form
+        const serviceSel = document.getElementById('service-unit');
+        if (serviceSel) {
+            const options = (window.units || []).map(u => `<option value="${u.name}">${u.name}</option>`).join('');
+            const current = serviceSel.value;
+            serviceSel.innerHTML = '<option value="">Select unit</option>' + options;
+            if (current) serviceSel.value = current;
+        }
+        // Bundle form
+        const bundleSel = document.getElementById('bundle-unit');
+        if (bundleSel) {
+            const options = (window.units || []).map(u => `<option value="${u.name}">${u.name}</option>`).join('');
+            const current = bundleSel.value;
+            bundleSel.innerHTML = '<option value="">Select unit</option>' + options;
+            if (current) bundleSel.value = current;
+        }
+    } catch {}
+}
+
+// Persist a unit name into settings.customUnits list (fallback persistence)
+async function persistUnitToSettings(name) {
+    try {
+        // Load current settings record
+        let current = null;
+        try {
+            const res = await fetch('tables/settings');
+            const data = await res.json();
+            current = (data.data && data.data.length > 0) ? data.data[0] : (window.settings || null);
+        } catch {}
+        if (!current) {
+            current = window.settings || { id: '1' };
+        }
+        const list = Array.isArray(current.customUnits) ? [...current.customUnits] : [];
+        if (!list.some(u => (u || '').toLowerCase() === (name || '').toLowerCase())) {
+            list.push(name);
+        }
+        const payload = { ...current, customUnits: list };
+        if (!payload.id) payload.id = '1';
+        const put = await fetch(`tables/settings/${payload.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!put.ok) return false;
+        try { await loadSettings(); } catch {}
+        try { await loadUnits(); } catch {}
+        return true;
+    } catch (e) {
+        console.warn('persistUnitToSettings failed:', e?.message || e);
+        return false;
+    }
+}
+
+// Build a usage map from services and bundles and attach to window
+async function buildUnitUsageMap() {
+    try {
+        const [svcRes, bRes] = await Promise.all([fetch('tables/services'), fetch('tables/bundles')]);
+        const svcData = svcRes.ok ? await svcRes.json() : { data: [] };
+        const bData = bRes.ok ? await bRes.json() : { data: [] };
+        const services = svcData.data || [];
+        const bundles = bData.data || [];
+        const map = {};
+        services.forEach(s => { const k = (s.unit || '').toLowerCase().trim(); if (k) map[k] = (map[k] || 0) + 1; });
+        bundles.forEach(b => { const k = (b.unit || '').toLowerCase().trim(); if (k) map[k] = (map[k] || 0) + 1; });
+        window.__unitUsageMap = map;
+        return map;
+    } catch (e) {
+        window.__unitUsageMap = window.__unitUsageMap || {};
+        return window.__unitUsageMap;
+    }
+}
+
+// Ensure any units discovered from usage exist in the units table
+async function syncUsageUnitsToDb() {
+    const usageMap = await buildUnitUsageMap();
+    const known = (window.units || []).map(u => (u.name || '').toLowerCase());
+    for (const nameLower of Object.keys(usageMap)) {
+        if (!known.includes(nameLower)) {
+            try {
+                const res = await fetch('tables/units', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: generateId(), name: nameLower })
+                });
+                if (res.ok) {
+                    try { await loadUnits(); } catch {}
+                }
+            } catch {}
+        }
+    }
 }

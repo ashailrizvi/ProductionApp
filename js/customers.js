@@ -46,7 +46,7 @@ async function loadCustomersTable() {
             row.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm font-medium text-white">${customer.clientName}</div>
-                    <div class="text-sm text-gray-400">${customer.taxId || 'No Tax ID'}</div>
+                    <div class="text-sm text-gray-400">${customer.taxId || 'No NTN'}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-white">${customer.contactPerson || '-'}</div>
@@ -124,6 +124,9 @@ async function editCustomer(customerId) {
             document.getElementById('customer-contact-person').value = customer.contactPerson || '';
             document.getElementById('customer-email').value = customer.email || '';
             document.getElementById('customer-phone').value = customer.phone || '';
+            if (document.getElementById('customer-website')) {
+                document.getElementById('customer-website').value = customer.website || '';
+            }
             document.getElementById('customer-address').value = customer.address || '';
             document.getElementById('customer-city').value = customer.city || '';
             document.getElementById('customer-country').value = customer.country || '';
@@ -183,9 +186,15 @@ async function viewCustomerDetails(customerId) {
                                 <p class="text-white">${customer.country || '-'}</p>
                             </div>
                             <div>
-                                <h4 class="text-sm font-medium text-gray-400 mb-1">Tax ID</h4>
+                                <h4 class="text-sm font-medium text-gray-400 mb-1">NTN</h4>
                                 <p class="text-white">${customer.taxId || '-'}</p>
                             </div>
+                            ${customer.website ? `
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-400 mb-1">Website</h4>
+                                <p class="text-white"><a href="${customer.website}" target="_blank" class="text-blue-400 hover:underline">${customer.website}</a></p>
+                            </div>
+                            ` : ''}
                             <div>
                                 <h4 class="text-sm font-medium text-gray-400 mb-1">Status</h4>
                                 <p class="text-white">${customer.isActive ? 'Active' : 'Inactive'}</p>
@@ -256,6 +265,238 @@ async function deleteCustomer(customerId) {
     }
 }
 
+// Import customers from Excel
+function importCustomers() {
+    const fileInput = document.getElementById('customer-excel-input');
+    if (!fileInput) {
+        showToast('Import control not found on page', 'error');
+        return;
+    }
+    // Reset previous selection to ensure change fires
+    fileInput.value = '';
+    fileInput.click();
+
+    fileInput.onchange = async function(e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        try {
+            await importCustomersFromExcel(file);
+        } finally {
+            // Clear selection for next import
+            fileInput.value = '';
+        }
+    };
+}
+
+// Process Excel and import/update customers in bulk
+async function importCustomersFromExcel(file) {
+    try {
+        showLoading();
+
+        // Ensure we have the latest customers in memory
+        if (typeof loadCustomers === 'function') {
+            await loadCustomers();
+        } else {
+            await loadCustomersData();
+        }
+
+        // Use shared Excel reader (from excel.js)
+        const data = await readExcelFile(file);
+
+        if (!data || data.length === 0) {
+            showToast('No data found in the Excel file', 'error');
+            return;
+        }
+
+        // Validate required header(s)
+        const headers = Object.keys(data[0] || {});
+        const requiredColumns = ['Client Name'];
+        const missing = requiredColumns.filter(c => !headers.includes(c));
+        if (missing.length > 0) {
+            showToast(`Missing required columns: ${missing.join(', ')}`, 'error');
+            return;
+        }
+
+        let imported = 0;
+        let updated = 0;
+        let skipped = 0;
+        let errors = 0;
+        const errorDetails = [];
+
+        const normalize = (v) => (v || '').toString().trim();
+        const toLower = (v) => normalize(v).toLowerCase();
+
+        // Helper to parse status -> boolean
+        const parseStatus = (v) => {
+            const val = toLower(v);
+            if (['active', 'y', 'yes', 'true', '1'].includes(val)) return true;
+            if (['inactive', 'n', 'no', 'false', '0'].includes(val)) return false;
+            // Default to active if unspecified
+            return true;
+        };
+
+        for (const [index, row] of data.entries()) {
+            try {
+                const clientName = normalize(row['Client Name']);
+                if (!clientName) {
+                    // Skip blank rows
+                    continue;
+                }
+
+                const contactPerson = normalize(row['Contact Person']);
+                const email = normalize(row['Email']);
+                const website = normalize(row['Website'] || row['Site'] || '');
+                const phone = normalize(row['Phone']);
+                const address = normalize(row['Address']);
+                const city = normalize(row['City']);
+                const country = normalize(row['Country']);
+                const taxId = normalize(row['NTN'] || row['Tax ID']);
+                const notes = normalize(row['Notes']);
+                const isActive = parseStatus(row['Status']);
+
+                const payload = {
+                    clientName,
+                    contactPerson,
+                    email,
+                    phone,
+                    website,
+                    address,
+                    city,
+                    country,
+                    taxId,
+                    notes,
+                    isActive
+                };
+
+                // Normalize multi phone values (split on ; or ,)
+                if (payload.phone) {
+                    const parts = payload.phone.split(/[;,\n]/).map(p => p.trim()).filter(Boolean);
+                    const seen = new Set();
+                    payload.phone = parts.filter(p => (seen.has(p) ? false : (seen.add(p), true))).join('; ');
+                }
+
+                // Basic email sanity if present
+                if (email && typeof validators === 'object' && validators.email && !validators.email(email)) {
+                    errorDetails.push(`Row ${index + 2}: Invalid email format (${email})`);
+                    errors++;
+                    continue;
+                }
+
+                // Find existing by priority: Tax ID > Email > Client Name
+                let existing = null;
+                if (taxId) {
+                    existing = (window.customers || []).find(c => toLower(c.taxId) === toLower(taxId));
+                }
+                if (!existing && email) {
+                    existing = (window.customers || []).find(c => toLower(c.email) === toLower(email));
+                }
+                if (!existing && clientName) {
+                    existing = (window.customers || []).find(c => toLower(c.clientName) === toLower(clientName));
+                }
+
+                if (existing) {
+                    // Equality check with normalization to avoid unnecessary updates
+                    const normalizeString = (v) => (v || '').toString().trim();
+                    const normLower = (v) => normalizeString(v).toLowerCase();
+                    const normalizePhones = (v) => {
+                        const arr = (v || '')
+                            .split(/[;,\n]/)
+                            .map(s => s.trim())
+                            .filter(Boolean)
+                            .map(s => s.replace(/\s+/g, ' '));
+                        // De-dup and sort to make comparison deterministic
+                        const unique = Array.from(new Set(arr));
+                        return unique.sort((a,b) => a.localeCompare(b)).join('; ');
+                    };
+                    const isEqualCustomer = (a, b) => {
+                        return (
+                            normLower(a.clientName) === normLower(b.clientName) &&
+                            normalizeString(a.contactPerson) === normalizeString(b.contactPerson) &&
+                            normLower(a.email) === normLower(b.email) &&
+                            normLower(a.website) === normLower(b.website) &&
+                            normalizePhones(a.phone) === normalizePhones(b.phone) &&
+                            normalizeString(a.address) === normalizeString(b.address) &&
+                            normalizeString(a.city) === normalizeString(b.city) &&
+                            normalizeString(a.country) === normalizeString(b.country) &&
+                            normLower(a.taxId) === normLower(b.taxId) &&
+                            normalizeString(a.notes) === normalizeString(b.notes) &&
+                            Boolean(a.isActive) === Boolean(b.isActive)
+                        );
+                    };
+
+                    if (isEqualCustomer(existing, payload)) {
+                        skipped++;
+                        continue; // no change, ignore
+                    }
+
+                    // Update existing
+                    const res = await fetch(`tables/customers/${existing.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (res.ok) {
+                        updated++;
+                    } else {
+                        errors++;
+                        errorDetails.push(`Row ${index + 2}: Failed to update ${clientName}`);
+                    }
+                } else {
+                    // Create new
+                    const createPayload = { id: generateId(), ...payload };
+                    const res = await fetch('tables/customers', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(createPayload)
+                    });
+                    if (res.ok) {
+                        imported++;
+                    } else {
+                        errors++;
+                        errorDetails.push(`Row ${index + 2}: Failed to create ${clientName}`);
+                    }
+                }
+            } catch (rowErr) {
+                console.error('Customer import row error:', rowErr);
+                errors++;
+                errorDetails.push(`Row ${index + 2}: ${rowErr.message || 'Unknown error'}`);
+            }
+        }
+
+        let message = `Import completed: ${imported} new, ${updated} updated`;
+        if (skipped > 0) message += `, ${skipped} unchanged`;
+        if (errors > 0) message += `, ${errors} errors`;
+        showToast(message, errors > 0 ? 'warning' : 'success');
+
+        if (errors > 0 && errorDetails.length > 0) {
+            try {
+                const blob = new Blob([errorDetails.join('\n')], { type: 'text/plain' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'customer_import_errors.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } catch (dErr) {
+                console.warn('Failed to generate error file:', dErr);
+            }
+        }
+
+        // Reload and refresh table
+        if (typeof loadCustomers === 'function') {
+            await loadCustomers();
+        } else {
+            await loadCustomersData();
+        }
+        loadCustomersTable();
+    } catch (error) {
+        console.error('Failed to import customers from Excel:', error);
+        showToast('Failed to import customers from Excel', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
 // Handle customer form submission
 document.addEventListener('DOMContentLoaded', function() {
     const customerForm = document.getElementById('customer-form-element');
@@ -268,6 +509,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 contactPerson: document.getElementById('customer-contact-person').value.trim(),
                 email: document.getElementById('customer-email').value.trim(),
                 phone: document.getElementById('customer-phone').value.trim(),
+                website: (document.getElementById('customer-website') ? document.getElementById('customer-website').value.trim() : ''),
                 address: document.getElementById('customer-address').value.trim(),
                 city: document.getElementById('customer-city').value.trim(),
                 country: document.getElementById('customer-country').value.trim(),
@@ -276,7 +518,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 isActive: document.getElementById('customer-active').checked
             };
             
-            // Validation
+            // Normalize multiple phone entries
+            if (formData.phone) {
+                const parts = formData.phone.split(/[;,\n]/).map(p => p.trim()).filter(Boolean);
+                const dedup = [];
+                const set = new Set();
+                for (const p of parts) { if (!set.has(p)) { set.add(p); dedup.push(p); } }
+                formData.phone = dedup.join('; ');
+            }
+
+            // Basic checks
+            if (formData.email && typeof validators?.email === 'function' && !validators.email(formData.email)) {
+                showToast('Invalid email format', 'error');
+                return;
+            }
             if (!formData.clientName) {
                 showToast('Client name is required', 'error');
                 return;
@@ -343,11 +598,12 @@ async function exportCustomers() {
             'Client Name': customer.clientName,
             'Contact Person': customer.contactPerson || '',
             'Email': customer.email || '',
+            'Website': customer.website || '',
             'Phone': customer.phone || '',
             'Address': customer.address || '',
             'City': customer.city || '',
             'Country': customer.country || '',
-            'Tax ID': customer.taxId || '',
+            'NTN': customer.taxId || '',
             'Status': customer.isActive ? 'Active' : 'Inactive',
             'Notes': customer.notes || ''
         }));

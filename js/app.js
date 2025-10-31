@@ -8,6 +8,7 @@ let quotations = [];
 let customers = [];
 let settings = {};
 let currencyRates = [];
+let units = [];
 
 // Environment variable for access password
 // In GenSpark, this would be read from environment variables
@@ -58,6 +59,7 @@ async function initializeApp() {
             loadServices(),
             loadBundles(),
             loadCustomers(),
+            loadUnits(),
             loadCompanyTemplates(),
             loadCurrencyRates()
         ]);
@@ -72,6 +74,7 @@ async function initializeApp() {
         window.loadServices = loadServices;
         window.loadBundles = loadBundles;
         window.loadCustomers = loadCustomers;
+        window.loadUnits = loadUnits;
         window.loadSettings = loadSettings;
         window.loadCompanyTemplates = loadCompanyTemplates;
         
@@ -282,6 +285,102 @@ async function updateDashboardStats() {
         document.getElementById('stats-bundles').textContent = '0';
         document.getElementById('stats-customers').textContent = '0';
         document.getElementById('stats-currencies').textContent = '0';
+    } finally {
+        // Always attempt to render the chart, even if stats calls failed
+        try {
+            // Wait one frame to ensure DOM visibility/layout after page switch
+            await new Promise(requestAnimationFrame);
+            await renderQuotationsActivityChart();
+            // Schedule a second pass in case layout changed after fonts/images load
+            setTimeout(() => { try { renderQuotationsActivityChart(); } catch {} }, 300);
+        } catch (e) {
+            console.warn('Chart render failed', e?.message || e);
+        }
+    }
+}
+
+// Render stacked bar chart of quotations vs invoiced quotations (last 14 days)
+async function renderQuotationsActivityChart(days = 14) {
+    const container = document.getElementById('dashboard-quote-chart');
+    if (!container) return;
+    container.textContent = 'Loading chart...';
+
+    try {
+        const resp = await fetch('tables/quotations');
+        const data = await resp.json();
+        const quotes = data.data || [];
+
+        // Build date buckets
+        const today = new Date();
+        const labels = [];
+        const fmt = (d) => d.toISOString().split('T')[0];
+        for (let i = days - 1; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            labels.push(fmt(d));
+        }
+        const counts = Object.fromEntries(labels.map(l => [l, { q: 0, inv: 0 }]));
+
+        quotes.forEach(q => {
+            const date = q.issueDate ? fmt(new Date(q.issueDate)) : null;
+            if (date && counts[date]) {
+                counts[date].q += 1;
+                if (q.invoiceGenerated) counts[date].inv += 1;
+            }
+        });
+
+        // Compute scales
+        const series = labels.map(l => counts[l]);
+        const maxVal = Math.max(1, ...series.map(s => s.q));
+
+        // Build SVG
+        let W = container.clientWidth || container.offsetWidth || 0;
+        let H = container.clientHeight || container.offsetHeight || 0;
+        if (!W || W < 100) W = 800; // fallback width if container not yet laid out
+        if (!H || H < 100) H = 256; // fallback height
+        const pad = { l: 40, r: 10, t: 10, b: 24 };
+        const chartW = W - pad.l - pad.r;
+        const chartH = H - pad.t - pad.b;
+        const barW = Math.max(8, Math.floor(chartW / labels.length) - 6);
+
+        let svg = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+        // Axes baseline
+        svg += `<line x1="${pad.l}" y1="${pad.t + chartH}" x2="${pad.l + chartW}" y2="${pad.t + chartH}" stroke="#374151" stroke-width="1"/>`;
+
+        labels.forEach((label, idx) => {
+            const s = counts[label];
+            const x = pad.l + idx * (chartW / labels.length) + ((chartW / labels.length) - barW) / 2;
+            const qH = (s.q / maxVal) * chartH;
+            const invH = (s.inv / maxVal) * chartH;
+            const yQ = pad.t + chartH - qH;
+            const yInv = pad.t + chartH - invH;
+            const tipAll = `${label}: Quotations ${s.q}, Invoiced ${s.inv}`;
+            const tipQ = `${label}: Quotations ${s.q}`;
+            const tipInv = `${label}: Invoiced ${s.inv}`;
+            // Quotations (yellow) stacked base with native SVG tooltip
+            svg += `<g>
+                        <rect x="${x}" y="${yQ}" width="${barW}" height="${qH}" fill="#D97706" rx="2"/>
+                        <title>${tipQ}</title>
+                    </g>`;
+            // Invoiced (green) overlay with tooltip
+            svg += `<g>
+                        <rect x="${x}" y="${yInv}" width="${barW}" height="${invH}" fill="#10B981" rx="2"/>
+                        <title>${tipInv}</title>
+                    </g>`;
+            // X labels every 2 days
+            if (idx % 2 === 0) {
+                const textX = x + barW / 2;
+                const textY = pad.t + chartH + 12;
+                const short = label.slice(5); // MM-DD
+                svg += `<text x="${textX}" y="${textY}" fill="#9CA3AF" font-size="10" text-anchor="middle">${short}</text>`;
+            }
+        });
+        svg += '</svg>';
+
+        container.innerHTML = svg;
+    } catch (e) {
+        console.error('Chart render error:', e);
+        container.textContent = 'No data available';
     }
 }
 
@@ -425,6 +524,107 @@ async function loadCompanyTemplates() {
         companyTemplates = [];
         window.companyTemplates = [];
     }
+}
+
+// Load units (for services and bundles)
+async function loadUnits() {
+    const defaults = [
+        'per hour',
+        'per day',
+        'per asset',
+        'per 6-hour shift',
+        'per 8-hour shift',
+        'per 10-hour shift',
+        'per 12-hour shift',
+        'per project',
+        'per person'
+    ];
+    let loaded = [];
+    try {
+        const response = await fetch('tables/units');
+        if (response.ok) {
+            const data = await response.json();
+            loaded = data.data || [];
+        }
+    } catch {}
+
+    // Seed defaults if table missing or empty
+    if (!loaded || loaded.length === 0) {
+        for (const name of defaults) {
+            try {
+                const unitObj = { id: generateId(), name };
+                await fetch('tables/units', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(unitObj)
+                });
+            } catch {}
+        }
+        try {
+            const res2 = await fetch('tables/units');
+            if (res2.ok) {
+                const data2 = await res2.json();
+                loaded = data2.data || [];
+            }
+        } catch {}
+    }
+
+    // Merge in any units already used by services or bundles (legacy data)
+    try {
+        const [svcRes, bRes] = await Promise.all([fetch('tables/services'), fetch('tables/bundles')]);
+        const svcData = svcRes.ok ? await svcRes.json() : { data: [] };
+        const bData = bRes.ok ? await bRes.json() : { data: [] };
+        const servicesList = svcData.data || [];
+        const bundlesList = bData.data || [];
+
+        const known = new Set((loaded || []).map(u => (u.name || '').toLowerCase().trim()));
+        const discovered = [];
+
+        servicesList.forEach(s => {
+            const u = (s.unit || '').trim();
+            if (u && !known.has(u.toLowerCase())) {
+                known.add(u.toLowerCase());
+                discovered.push({ id: generateId(), name: u });
+            }
+        });
+        bundlesList.forEach(b => {
+            const u = (b.unit || '').trim();
+            if (u && !known.has(u.toLowerCase())) {
+                known.add(u.toLowerCase());
+                discovered.push({ id: generateId(), name: u });
+            }
+        });
+
+        if (discovered.length > 0) {
+            // Update local list so dropdowns include legacy units immediately
+            loaded = (loaded || []).concat(discovered);
+            // Best-effort: persist discovered units to DB (ignore failures)
+            for (const unit of discovered) {
+                try {
+                    await fetch('tables/units', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(unit)
+                    });
+                } catch {}
+            }
+        }
+    } catch {}
+
+    // Merge in any custom units saved in settings
+    try {
+        const custom = (typeof settings === 'object' && Array.isArray(settings.customUnits)) ? settings.customUnits : [];
+        if (custom && custom.length > 0) {
+            const lowerSet = new Set((loaded || []).map(u => (u.name || '').toLowerCase().trim()));
+            const toAdd = custom.filter(n => n && !lowerSet.has(n.toLowerCase().trim()));
+            if (toAdd.length > 0) {
+                loaded = (loaded || []).concat(toAdd.map(n => ({ id: generateId(), name: n })));
+            }
+        }
+    } catch {}
+
+    units = loaded || [];
+    window.units = units;
 }
 
 // Utility functions

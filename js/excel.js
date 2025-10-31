@@ -243,7 +243,7 @@ async function exportAllInvoicesExcel() {
                 'Tax Amount': taxAmount.toFixed(2),
                 'Discount Amount': discountAmount.toFixed(2),
                 'Grand Total': grandTotal.toFixed(2),
-                'Status': new Date(invoice.dueDate) < new Date() ? 'Overdue' : 'Active'
+                'Status': invoice.status || 'Pending'
             });
         }
         
@@ -294,7 +294,6 @@ async function importServicesFromExcel(file) {
             'Currency': 'currency',
             'Content Types': 'contentTypes',
             'Team Roles': 'teamRoles',
-            'Is Optional (Y/N)': 'isOptional',
             'Is Negotiable (Y/N)': 'isNegotiable',
             'Min Qty': 'minQty',
             'Max Qty': 'maxQty',
@@ -337,7 +336,6 @@ async function importServicesFromExcel(file) {
                         case 'maxQty':
                             serviceData[serviceField] = value && value !== '' ? parseFloat(value) : null;
                             break;
-                        case 'isOptional':
                         case 'isNegotiable':
                             serviceData[serviceField] = value ? value.toString().toUpperCase() === 'Y' : false;
                             break;

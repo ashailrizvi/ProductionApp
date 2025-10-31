@@ -116,6 +116,8 @@
             <div id="password-error" class="hidden mt-4 text-red-400 text-center">
                 <i class="fas fa-exclamation-triangle mr-2"></i>Invalid password. Please try again.
             </div>
+            
+
         </div>
     </div>
 
@@ -152,6 +154,8 @@
                     </button>
                 </div>
             </div>
+
+            
         </div>
         <!-- Mobile menu -->
         <div id="mobile-menu" class="hidden md:hidden bg-gray-800">
@@ -276,7 +280,7 @@
             </div>
             
             <!-- Pricing Formula Reference -->
-            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mt-8">
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mt-8 hidden">
                 <h3 class="text-xl font-semibold text-white mb-4">
                     <i class="fas fa-calculator mr-2"></i>Pricing Formula Reference
                 </h3>
@@ -294,6 +298,22 @@
                         <span class="text-blue-400">AdjustedRate</span> × 
                         <span class="text-cyan-400">Quantity</span>
                     </div>
+                </div>
+            </div>
+
+            <!-- Quotations Activity (Stacked Bar) -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mt-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-white">
+                        <i class="fas fa-chart-column mr-2"></i>Quotations Activity (Last 14 Days)
+                    </h3>
+                    <div class="flex items-center text-xs space-x-3">
+                        <span class="inline-flex items-center"><span class="w-3 h-3 bg-yellow-500 inline-block rounded mr-1"></span><span class="text-gray-300">Quotations</span></span>
+                        <span class="inline-flex items-center"><span class="w-3 h-3 bg-green-500 inline-block rounded mr-1"></span><span class="text-gray-300">Invoiced</span></span>
+                    </div>
+                </div>
+                <div id="dashboard-quote-chart" class="w-full h-64 bg-gray-900 rounded flex items-center justify-center text-gray-400">
+                    Loading chart...
                 </div>
             </div>
         </div>
@@ -315,6 +335,10 @@
                     <button onclick="exportServices()" 
                             class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
                         <i class="fas fa-download mr-2"></i>Export Excel
+                    </button>
+                    <button id="services-delete-selected" onclick="deleteSelectedServices()" 
+                            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <i class="fas fa-trash mr-2"></i>Delete Selected
                     </button>
                     <button onclick="showServiceForm()" 
                             class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
@@ -348,9 +372,11 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-400 mb-2">Unit</label>
-                            <input type="text" id="service-unit"
-                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
-                                   placeholder="per day, per hour, etc.">
+                            <select id="service-unit"
+                                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                                <option value="">Select unit</option>
+                            </select>
+                            <p class="mt-1 text-xs text-gray-400">Manage units in Settings</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-400 mb-2">Base Rate</label>
@@ -378,11 +404,6 @@
                                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
                         </div>
                         <div class="flex items-center space-x-6">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="service-optional"
-                                       class="w-4 h-4 text-primary-600 bg-gray-700 border-gray-600 rounded focus:ring-primary-500">
-                                <span class="ml-2 text-sm text-gray-400">Optional</span>
-                            </label>
                             <label class="flex items-center">
                                 <input type="checkbox" id="service-negotiable"
                                        class="w-4 h-4 text-primary-600 bg-gray-700 border-gray-600 rounded focus:ring-primary-500">
@@ -432,11 +453,58 @@
             </div>
 
             <!-- Services Table -->
+            <!-- Services Filters -->
+            <div class="bg-gray-800 rounded-lg border border-gray-700 mb-4 p-4">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Search</label>
+                        <input id="services-search" type="text" placeholder="Search code, name, category, notes..."
+                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Category</label>
+                        <select id="services-filter-category" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Unit</label>
+                        <select id="services-filter-unit" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 mb-1">Negotiable</label>
+                            <select id="services-filter-negotiable" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white">
+                                <option value="">All</option>
+                                <option value="yes">Yes</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 mb-1">Rate</label>
+                            <select id="services-filter-rate" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white">
+                                <option value="">All</option>
+                                <option value="has">Has Rate</option>
+                                <option value="tbd">TBD</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 flex justify-end">
+                    <button id="services-filters-clear" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded text-sm">Clear Filters</button>
+                </div>
+            </div>
+
             <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-700">
                         <thead class="bg-gray-700">
                             <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <input type="checkbox" id="services-select-all" onclick="toggleSelectAllServices(this.checked)">
+                                </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Service Code</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Category</th>
@@ -463,11 +531,11 @@
                     </h2>
                     <p class="text-gray-400">Create and manage service package bundles</p>
                 </div>
-                <div class="flex space-x-3">
-                    <button onclick="addSampleBundleData()" 
-                            class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
-                        <i class="fas fa-database mr-2"></i>Add Sample Data
-                    </button>
+                <div class="flex items-center space-x-3">
+                    <div class="hidden md:block">
+                        <input id="bundles-search" type="text" placeholder="Search bundles by name"
+                               class="w-64 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white" />
+                    </div>
                     <button onclick="importBundlesFromExcel()" 
                             class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
                         <i class="fas fa-upload mr-2"></i>Import Excel
@@ -515,12 +583,12 @@
                                    placeholder="Basic Production Package">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-400 mb-2">Parent Service</label>
-                            <select id="bundle-parent-service"
-                                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
-                                <option value="">Select parent service (optional)</option>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Bundle Unit</label>
+                            <select id="bundle-unit" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                                <option value="">Select unit</option>
                             </select>
                         </div>
+                        
                         <div class="col-span-full">
                             <label class="block text-sm font-medium text-gray-400 mb-2">Bundle Description</label>
                             <textarea id="bundle-description" rows="3"
@@ -554,7 +622,8 @@
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase">Quantity</th>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase">Base Rate</th>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase">Total Cost</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase">Include</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase">Optional</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase">Included by Default</th>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase">Notes</th>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase">Actions</th>
                                     </tr>
@@ -640,6 +709,10 @@
                     <p class="text-gray-400">Manage your client database</p>
                 </div>
                 <div class="flex space-x-3">
+                    <button onclick="importCustomers()" 
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-upload mr-2"></i>Import Excel
+                    </button>
                     <button onclick="exportCustomers()" 
                             class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
                         <i class="fas fa-download mr-2"></i>Export Excel
@@ -675,10 +748,17 @@
                                    placeholder="contact@company.com">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-400 mb-2">Phone</label>
-                            <input type="tel" id="customer-phone"
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Website</label>
+                            <input type="url" id="customer-website"
                                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
-                                   placeholder="+92-300-1234567">
+                                   placeholder="https://example.com">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Phone(s)</label>
+                            <input type="text" id="customer-phone"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+                                   placeholder="0311-1122101; +92 300 0000000">
+                            <p class="mt-1 text-xs text-gray-400">Separate multiple numbers with a semicolon ;</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-400 mb-2">City</label>
@@ -693,10 +773,10 @@
                                    placeholder="Pakistan">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-400 mb-2">Tax/VAT ID</label>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">NTN</label>
                             <input type="text" id="customer-tax-id"
                                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
-                                   placeholder="TAX-123456">
+                                   placeholder="1234567-8">
                         </div>
                         <div class="flex items-center">
                             <label class="flex items-center">
@@ -1111,55 +1191,7 @@
                 </div>
             </div>
 
-            <!-- Quotation Preview Modal -->
-            <div id="quotation-preview-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
-                <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto print:max-h-none print:overflow-visible">
-                    <div class="p-8 print:p-0">
-                        <div class="flex justify-between items-center mb-6 print:hidden">
-                            <h3 class="text-xl font-semibold text-gray-800">Quotation Preview</h3>
-                            <div class="flex space-x-3">
-                                <button onclick="window.print()" 
-                                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
-                                    <i class="fas fa-print mr-2"></i>Print
-                                </button>
-                                <button onclick="closeQuotationPreview()" 
-                                        class="text-gray-400 hover:text-gray-600 bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div id="quotation-preview-content" class="space-y-6">
-                            <!-- Preview content will be loaded here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Invoice Preview Modal -->
-            <div id="invoice-preview-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
-                <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto print:max-h-none print:overflow-visible">
-                    <div class="p-8 print:p-0">
-                        <div class="flex justify-between items-center mb-6 print:hidden">
-                            <h3 class="text-xl font-semibold text-gray-800">Invoice Preview</h3>
-                            <div class="flex space-x-3">
-                                <button onclick="window.print()" 
-                                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
-                                    <i class="fas fa-print mr-2"></i>Print
-                                </button>
-                                <button onclick="closeInvoicePreview()" 
-                                        class="text-gray-400 hover:text-gray-600 bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div id="invoice-preview-content" class="space-y-6">
-                            <!-- Preview content will be loaded here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
+            
         </div>
 
         <!-- Invoices Page -->
@@ -1208,14 +1240,17 @@
                             <h3 class="text-xl font-semibold text-white">All Invoices</h3>
                             <div class="flex space-x-3">
                                 <input type="text" id="invoice-search" placeholder="Search invoices..." 
-                                       class="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white placeholder-gray-400">
+                                        class="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white placeholder-gray-400">
                                 <select id="invoice-status-filter" 
                                         class="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
                                     <option value="">All Statuses</option>
-                                    <option value="Draft">Draft</option>
-                                    <option value="Sent">Sent</option>
-                                    <option value="Paid">Paid</option>
-                                    <option value="Overdue">Overdue</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Cleared">Cleared</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                                <select id="invoice-client-filter" 
+                                        class="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                                    <option value="">All Clients</option>
                                 </select>
                             </div>
                         </div>
@@ -1415,6 +1450,30 @@
                             <!-- Currency rates will be populated here -->
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- Units Management -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mt-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-semibold text-white">Units</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Add New Unit</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="new-unit-input" placeholder="e.g., per 8-hour shift"
+                                   class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white">
+                            <button id="add-unit-btn" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-plus mr-2"></i>Add
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Units become available in service and bundle forms.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Available Units</label>
+                        <div id="units-list" class="bg-gray-700 border border-gray-600 rounded-lg p-3 text-white text-sm min-h-[44px]"></div>
+                    </div>
                 </div>
             </div>
 
@@ -1716,10 +1775,12 @@
     <script src="js/invoices.js"></script>
 <script src="js/quotations.js"></script>
     <script src="js/settings.js"></script>
-    <script src="js/excel.js"></script>
-    <script src="js/excel-globals.js"></script>
-    <script src="js/pdf.js"></script>
-    <script src="js/pdf-globals.js"></script>
+         <script src="js/excel.js"></script>
+         <script src="js/excel-globals.js"></script>
+         <script src="js/pdf.js"></script>
+         <script src="js/pdf-globals.js"></script>
+        <!-- Hidden inputs for Excel imports -->
+        <input type="file" id="customer-excel-input" accept=".xlsx,.xls" class="hidden">
     
     <!-- Template Change Modal -->
     <div id="change-template-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
@@ -1762,5 +1823,57 @@
     
     <!-- Load main app last -->
     <script src="js/app.js"></script>
-</body>
+
+    <!-- Global Preview Modals (moved outside page containers) -->
+    <!-- Quotation Preview Modal -->
+    <div id="quotation-preview-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto print:max-h-none print:overflow-visible">
+            <div class="p-8 print:p-0">
+                <div class="flex justify-between items-center mb-6 print:hidden">
+                    <h3 class="text-xl font-semibold text-gray-800">Quotation Preview</h3>
+                    <div class="flex space-x-3">
+                        <button onclick="window.print()" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
+                            <i class="fas fa-print mr-2"></i>Print
+                        </button>
+                        <button onclick="closeQuotationPreview()" 
+                                class="text-gray-400 hover:text-gray-600 bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="quotation-preview-content" class="space-y-6">
+                    <!-- Preview content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Preview Modal -->
+    <div id="invoice-preview-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto print:max-h-none print:overflow-visible">
+            <div class="p-8 print:p-0">
+                <div class="flex justify-between items-center mb-6 print:hidden">
+                    <h3 class="text-xl font-semibold text-gray-800">Invoice Preview</h3>
+                    <div class="flex space-x-3">
+                        <button onclick="window.print()" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
+                            <i class="fas fa-print mr-2"></i>Print
+                        </button>
+                        <button onclick="closeInvoicePreview()" 
+                                class="text-gray-400 hover:text-gray-600 bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="invoice-preview-content" class="space-y-6">
+                    <!-- Preview content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+  </body>
 </html>

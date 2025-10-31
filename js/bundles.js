@@ -8,7 +8,7 @@ async function loadBundlesView() {
         // Load bundles data
         const bundlesResponse = await fetch('tables/bundles');
         const bundlesData = await bundlesResponse.json();
-        const bundles = bundlesData.data || [];
+        let bundles = bundlesData.data || [];
         
         // Load bundle items
         const itemsResponse = await fetch('tables/bundle_items');
@@ -21,6 +21,18 @@ async function loadBundlesView() {
         const services = servicesData.data || [];
         
         const container = document.getElementById('bundles-container');
+        // Initialize search input once
+        try {
+            const searchEl = document.getElementById('bundles-search');
+            if (searchEl && !searchEl.hasAttribute('data-listener-added')) {
+                searchEl.addEventListener('input', () => { try { loadBundlesView(); } catch {} });
+                searchEl.setAttribute('data-listener-added', 'true');
+            }
+            const q = (searchEl?.value || '').trim().toLowerCase();
+            if (q) {
+                bundles = bundles.filter(b => (b.name || '').toLowerCase().includes(q));
+            }
+        } catch {}
         container.innerHTML = '';
         
         if (bundles.length === 0) {
@@ -35,8 +47,17 @@ async function loadBundlesView() {
         }
         
         bundles.forEach(bundle => {
-            const items = bundleItems.filter(item => item.bundleId === bundle.id && item.include);
-            const parentService = services.find(s => s.id === bundle.parentServiceId);
+            const items = (bundleItems || []).filter(item => item.bundleId === bundle.id)
+                .filter(item => {
+                    // Backward-compatible include logic:
+                    // - Required when isOptional is false
+                    // - Optional included by default when defaultSelected is true
+                    // - Fallback to legacy 'include' when new fields are missing
+                    const isOptional = typeof item.isOptional === 'boolean' ? item.isOptional : false;
+                    const defaultSelected = typeof item.defaultSelected === 'boolean' ? item.defaultSelected : (item.include !== false);
+                    return !isOptional || defaultSelected;
+                });
+            const parentService = null; // parent service removed
             
             // Calculate bundle cost
             let totalBundleCost = 0;
@@ -74,7 +95,7 @@ async function loadBundlesView() {
                             </h3>
                             <div class="flex items-center space-x-4 text-sm text-gray-400">
                                 <span><strong>Bundle Code:</strong> ${bundle.bundleCode}</span>
-                                ${parentService ? `<span><strong>Parent Service:</strong> ${parentService.serviceCode} - ${parentService.name}</span>` : ''}
+                                
                             </div>
                         </div>
                         <div class="text-right">
@@ -159,20 +180,22 @@ async function loadBundlesView() {
 // Get bundle cost for a service
 async function getBundleCost(serviceId) {
     try {
-        // Find if this service is a parent in any bundle
+        // Find a bundle by id or legacy parentServiceId
         const availableBundles = window.bundles || bundles || [];
-        const bundle = availableBundles.find(b => b.parentServiceId === serviceId);
+        const bundle = availableBundles.find(b => b.id === serviceId || b.parentServiceId === serviceId);
         if (!bundle) return 0;
         
         // Get bundle items
         const itemsResponse = await fetch(`tables/bundle_items?search=${bundle.id}`);
         const itemsData = await itemsResponse.json();
-        const items = itemsData.data || [];
+        const items = (itemsData.data || []).filter(it => it.bundleId === bundle.id);
         
         let totalCost = 0;
         
         for (const item of items) {
-            if (item.include) {
+            const isOptional = typeof item.isOptional === 'boolean' ? item.isOptional : false;
+            const defaultSelected = typeof item.defaultSelected === 'boolean' ? item.defaultSelected : (item.include !== false);
+            if (!isOptional || defaultSelected) {
                 const availableServices = window.services || services || [];
                 const childService = availableServices.find(s => s.id === item.childServiceId);
                 if (childService && childService.baseRate) {
@@ -205,7 +228,7 @@ async function expandBundle(serviceId, expandBundles = false) {
             rate: service.baseRate || 0,
             bundleCost: bundleCost,
             unit: service.unit,
-            isOptional: service.isOptional,
+            // Service-level optional removed; bundles control optionality
             currency: service.currency
         }];
     }
@@ -213,7 +236,7 @@ async function expandBundle(serviceId, expandBundles = false) {
     try {
         // Find bundle for this service
         const availableBundles = window.bundles || bundles || [];
-        const bundle = availableBundles.find(b => b.parentServiceId === serviceId);
+        const bundle = availableBundles.find(b => b.id === serviceId || b.parentServiceId === serviceId);
         if (!bundle) {
             // Not a bundle, return original service
             const availableServices = window.services || services || [];
@@ -228,7 +251,7 @@ async function expandBundle(serviceId, expandBundles = false) {
                 rate: service.baseRate || 0,
                 bundleCost: 0,
                 unit: service.unit,
-                isOptional: service.isOptional,
+                // Service-level optional removed
                 currency: service.currency
             }];
         }
@@ -236,12 +259,14 @@ async function expandBundle(serviceId, expandBundles = false) {
         // Get bundle items
         const itemsResponse = await fetch(`tables/bundle_items?search=${bundle.id}`);
         const itemsData = await itemsResponse.json();
-        const items = itemsData.data || [];
+        const items = (itemsData.data || []).filter(it => it.bundleId === bundle.id);
         
         const expandedItems = [];
         
         for (const item of items) {
-            if (item.include) {
+            const isOptional = typeof item.isOptional === 'boolean' ? item.isOptional : false;
+            const defaultSelected = typeof item.defaultSelected === 'boolean' ? item.defaultSelected : (item.include !== false);
+            if (!isOptional || defaultSelected) {
                 const availableServices = window.services || services || [];
                 const childService = availableServices.find(s => s.id === item.childServiceId);
                 if (childService) {
@@ -255,7 +280,7 @@ async function expandBundle(serviceId, expandBundles = false) {
                             rate: childService.baseRate || 0,
                             bundleCost: 0,
                             unit: childService.unit,
-                            isOptional: childService.isOptional,
+                            // Service-level optional removed
                             currency: childService.currency,
                             fromBundle: bundle.name,
                             bundleNote: item.notes
@@ -276,14 +301,10 @@ async function expandBundle(serviceId, expandBundles = false) {
 // Check if service is a bundle parent
 function isBundle(serviceId) {
     const availableBundles = window.bundles || bundles || [];
-    return availableBundles.some(b => b.parentServiceId === serviceId);
+    return availableBundles.some(b => b.id === serviceId || b.parentServiceId === serviceId);
 }
 
-// Get all bundle parent services for dropdown
-function getBundleServices() {
-    const availableServices = window.services || services || [];
-    return availableServices.filter(service => isBundle(service.id));
-}
+// Removed parent service concept
 
 // Bundle Builder Variables
 let bundleItems = [];
@@ -304,11 +325,12 @@ async function showBundleBuilder() {
     // Clear form
     document.getElementById('bundle-code').value = '';
     document.getElementById('bundle-name').value = '';
-    document.getElementById('bundle-parent-service').value = '';
+    // parent service removed
     document.getElementById('bundle-description').value = '';
+    await populateBundleUnitSelect();
     
     // Load parent service dropdown
-    await loadParentServiceDropdown();
+    // parent service removed
     
     // Add default first item
     addBundleItem();
@@ -326,39 +348,37 @@ function hideBundleBuilder() {
     document.getElementById('bundles-list').classList.remove('hidden');
 }
 
-// Load parent service dropdown
-async function loadParentServiceDropdown() {
+// Populate Bundle Unit select (shared by create/edit)
+async function populateBundleUnitSelect(selectedValue = '') {
     try {
-        // Ensure services are loaded
-        if ((!services || services.length === 0) && (!window.services || window.services.length === 0)) {
+        const sel = document.getElementById('bundle-unit');
+        if (!sel) return;
+        // Ensure units are loaded
+        if (!window.units || window.units.length === 0) {
             try {
-                const response = await fetch('tables/services');
-                if (response.ok) {
-                    const data = await response.json();
-                    services = data.data || [];
-                    window.services = services;
+                if (typeof loadUnits === 'function') {
+                    await loadUnits();
+                } else if (typeof window.loadUnits === 'function') {
+                    await window.loadUnits();
                 }
-            } catch (error) {
-                console.error('Failed to load services:', error);
-            }
+            } catch {}
         }
-        
-        const dropdown = document.getElementById('bundle-parent-service');
-        if (!dropdown) return;
-        
-        dropdown.innerHTML = '<option value="">Select parent service (optional)</option>';
-        
-        const availableServices = window.services || services || [];
-        availableServices.forEach(service => {
-            const option = document.createElement('option');
-            option.value = service.id;
-            option.textContent = `${service.serviceCode} - ${service.name}`;
-            dropdown.appendChild(option);
-        });
-    } catch (error) {
-        console.error('Error loading parent service dropdown:', error);
+        const list = window.units || [];
+        const current = sel.value;
+        sel.innerHTML = '<option value="">Select unit</option>' + list.map(u => `<option value="${u.name}">${u.name}</option>`).join('');
+        // Prefer explicit selectedValue, else keep existing, else empty
+        sel.value = selectedValue || current || '';
+        // Default to 'per day' if still empty and available
+        if (!sel.value || sel.value.trim() === '') {
+            const opt = Array.from(sel.options).find(o => (o.value || '').toLowerCase() === 'per day');
+            if (opt) sel.value = opt.value;
+        }
+    } catch (e) {
+        console.warn('populateBundleUnitSelect failed', e?.message || e);
     }
 }
+
+// loadParentServiceDropdown removed
 
 // Add bundle item
 function addBundleItem() {
@@ -370,6 +390,9 @@ function addBundleItem() {
         quantity: 1,
         baseRate: 0,
         totalCost: 0,
+        // Bundle-level optional control
+        isOptional: false,
+        defaultSelected: true,
         include: true,
         notes: ''
     };
@@ -419,10 +442,20 @@ function updateBundleItemsTable() {
                 <span class="text-white font-medium text-sm">${formatCurrency(item.totalCost, 'PKR')}</span>
             </td>
             <td class="px-4 py-2">
-                <label class="flex items-center">
-                    <input type="checkbox" ${item.include ? 'checked' : ''} 
-                           onchange="updateBundleItemInclude(${index}, this.checked)"
+                <label class="flex items-center space-x-2 text-sm text-gray-200">
+                    <input type="checkbox" ${item.isOptional ? 'checked' : ''}
+                           onchange="updateBundleItemOptional(${index}, this.checked)"
                            class="w-4 h-4 text-primary-600 bg-gray-600 border-gray-500 rounded focus:ring-primary-500">
+                    <span>Optional</span>
+                </label>
+            </td>
+            <td class="px-4 py-2">
+                <label class="flex items-center space-x-2 text-sm text-gray-200">
+                    <input type="checkbox" ${item.defaultSelected ? 'checked' : ''}
+                           ${!item.isOptional ? 'disabled' : ''}
+                           onchange="updateBundleItemDefaultSelected(${index}, this.checked)"
+                           class="w-4 h-4 text-primary-600 bg-gray-600 border-gray-500 rounded focus:ring-primary-500">
+                    <span>Included</span>
                 </label>
             </td>
             <td class="px-4 py-2">
@@ -466,8 +499,17 @@ function updateBundleItemQuantity(index, quantity) {
     updateBundleItemsTable();
 }
 
-function updateBundleItemInclude(index, include) {
-    bundleItems[index].include = include;
+function updateBundleItemOptional(index, isOptional) {
+    bundleItems[index].isOptional = !!isOptional;
+    if (!bundleItems[index].isOptional) {
+        // Required items are always included by default
+        bundleItems[index].defaultSelected = true;
+    }
+    updateBundleItemsTable();
+}
+
+function updateBundleItemDefaultSelected(index, defSel) {
+    bundleItems[index].defaultSelected = !!defSel;
     updateBundleItemsTable();
 }
 
@@ -489,11 +531,11 @@ function calculateBundleItemTotal(index) {
 // Update bundle summary
 function updateBundleSummary() {
     const totalItems = bundleItems.length;
-    const includedItems = bundleItems.filter(item => item.include).length;
+    const includedItems = bundleItems.filter(item => !item.isOptional || item.defaultSelected).length;
     
     const totalCost = bundleItems.reduce((sum, item) => sum + (item.totalCost || 0), 0);
     const includedCost = bundleItems
-        .filter(item => item.include)
+        .filter(item => !item.isOptional || item.defaultSelected)
         .reduce((sum, item) => sum + (item.totalCost || 0), 0);
     
     document.getElementById('bundle-total-items').textContent = totalItems;
@@ -520,7 +562,7 @@ async function refreshBundleServiceDropdowns() {
         }
     }
     
-    await loadParentServiceDropdown();
+    // parent service removed
     updateBundleItemsTable();
 }
 
@@ -568,8 +610,9 @@ async function saveBundle() {
         const bundleData = {
             bundleCode: bundleCode,
             name: bundleName,
-            parentServiceId: document.getElementById('bundle-parent-service').value || null,
-            description: document.getElementById('bundle-description').value.trim()
+            // parentServiceId removed
+            description: document.getElementById('bundle-description').value.trim(),
+            unit: (document.getElementById('bundle-unit')?.value || '').trim()
         };
         
         let bundleResponse;
@@ -614,7 +657,10 @@ async function saveBundle() {
                     bundleId: savedBundle.id,
                     childServiceId: item.serviceId,
                     childQty: item.quantity,
-                    include: item.include,
+                    // Store both new and legacy fields for compatibility
+                    isOptional: !!item.isOptional,
+                    defaultSelected: item.isOptional ? !!item.defaultSelected : true,
+                    include: item.isOptional ? !!item.defaultSelected : true,
                     notes: item.notes
                 };
                 
@@ -627,7 +673,21 @@ async function saveBundle() {
         }
         
         showToast(currentBundleId ? 'Bundle updated successfully' : 'Bundle saved successfully', 'success');
-        
+        // Refresh global bundles cache so other pages (e.g., quotations) see the new/updated bundle
+        try {
+            if (typeof loadBundles === 'function') {
+                await loadBundles();
+            } else if (typeof window.loadBundles === 'function') {
+                await window.loadBundles();
+            } else {
+                const res = await fetch('tables/bundles');
+                if (res.ok) {
+                    const d = await res.json();
+                    window.bundles = d.data || [];
+                }
+            }
+        } catch {}
+
         // Reload bundles and return to list
         await loadBundlesView();
         hideBundleBuilder();
@@ -648,7 +708,7 @@ async function editBundle(bundleId) {
         // Load bundle items
         const itemsResponse = await fetch(`tables/bundle_items?search=${bundleId}`);
         const itemsData = await itemsResponse.json();
-        const items = itemsData.data || [];
+        const items = (itemsData.data || []).filter(it => it.bundleId === bundleId);
         
         // Set current bundle ID
         currentBundleId = bundleId;
@@ -656,18 +716,20 @@ async function editBundle(bundleId) {
         // Show bundle builder
         document.getElementById('bundles-list').classList.add('hidden');
         document.getElementById('bundle-builder').classList.remove('hidden');
-        
+
         // Initialize form listeners
         initializeBundleFormListeners();
-        
+
         // Populate form fields
         document.getElementById('bundle-code').value = bundle.bundleCode;
         document.getElementById('bundle-name').value = bundle.name;
-        document.getElementById('bundle-parent-service').value = bundle.parentServiceId || '';
+        // parent service removed
         document.getElementById('bundle-description').value = bundle.description || '';
+
+        // Populate units and set existing selection
+        await populateBundleUnitSelect(bundle.unit || '');
         
-        // Load parent service dropdown
-        await loadParentServiceDropdown();
+        // parent service removed
         
         // Populate bundle items
         bundleItems = items.map(item => {
@@ -682,7 +744,9 @@ async function editBundle(bundleId) {
                 quantity: item.childQty || 1,
                 baseRate: service ? service.baseRate || 0 : 0,
                 totalCost: (service ? service.baseRate || 0 : 0) * (item.childQty || 1),
-                include: item.include,
+                isOptional: typeof item.isOptional === 'boolean' ? item.isOptional : false,
+                defaultSelected: typeof item.defaultSelected === 'boolean' ? item.defaultSelected : (item.include !== false),
+                include: typeof item.include === 'boolean' ? item.include : true,
                 notes: item.notes || ''
             };
         });
@@ -707,7 +771,7 @@ async function deleteBundle(bundleId) {
         // Delete bundle items first
         const itemsResponse = await fetch(`tables/bundle_items?search=${bundleId}`);
         const itemsData = await itemsResponse.json();
-        const items = itemsData.data || [];
+        const items = (itemsData.data || []).filter(it => it.bundleId === bundleId);
         
         for (const item of items) {
             await fetch(`tables/bundle_items/${item.id}`, { method: 'DELETE' });
@@ -716,6 +780,21 @@ async function deleteBundle(bundleId) {
         // Delete bundle
         await fetch(`tables/bundles/${bundleId}`, { method: 'DELETE' });
         
+        // Refresh global bundles cache after delete
+        try {
+            if (typeof loadBundles === 'function') {
+                await loadBundles();
+            } else if (typeof window.loadBundles === 'function') {
+                await window.loadBundles();
+            } else {
+                const res = await fetch('tables/bundles');
+                if (res.ok) {
+                    const d = await res.json();
+                    window.bundles = d.data || [];
+                }
+            }
+        } catch {}
+
         showToast('Bundle deleted successfully', 'success');
         loadBundlesView();
         
@@ -725,177 +804,7 @@ async function deleteBundle(bundleId) {
     }
 }
 
-// Add sample bundle data
-async function addSampleBundleData() {
-    try {
-        showLoading();
-        
-        // Sample bundles data based on common security packages
-        const sampleBundles = [
-            {
-                bundleCode: "PKG-BASIC-SEC",
-                name: "Basic Security Package",
-                parentServiceId: null,
-                description: "Essential security services for small properties"
-            },
-            {
-                bundleCode: "PKG-PREMIUM-SEC", 
-                name: "Premium Security Package",
-                parentServiceId: null,
-                description: "Comprehensive security solution for large properties"
-            },
-            {
-                bundleCode: "PKG-EVENT-SEC",
-                name: "Event Security Package",
-                parentServiceId: null,
-                description: "Complete security coverage for events and gatherings"
-            }
-        ];
-
-        // Get available services to create realistic bundle items
-        const servicesResponse = await fetch('tables/services');
-        const servicesData = await servicesResponse.json();
-        const services = servicesData.data || [];
-        
-        console.log('Available services:', services);
-        
-        if (services.length === 0) {
-            showToast('No services available. Please add services first.', 'warning');
-            return;
-        }
-        
-        // Create bundles and their items
-        for (const bundleData of sampleBundles) {
-            // Create bundle
-            const bundleResponse = await fetch('tables/bundles', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(bundleData)
-            });
-            
-            if (!bundleResponse.ok) continue;
-            
-            const savedBundle = await bundleResponse.json();
-            
-            // Create sample bundle items based on bundle type
-            let bundleItems = [];
-            
-            if (bundleData.bundleCode === "PKG-BASIC-SEC") {
-                // Basic package: 2 security guards, 1 supervisor
-                const guardService = services.find(s => s.name && s.name.toLowerCase().includes('guard'));
-                const supervisorService = services.find(s => s.name && s.name.toLowerCase().includes('supervisor'));
-                
-                if (guardService) {
-                    bundleItems.push({
-                        bundleId: savedBundle.id,
-                        childServiceId: guardService.id,
-                        childQty: 2,
-                        include: true,
-                        notes: "Main security coverage"
-                    });
-                }
-                
-                if (supervisorService) {
-                    bundleItems.push({
-                        bundleId: savedBundle.id,
-                        childServiceId: supervisorService.id,
-                        childQty: 1,
-                        include: true,
-                        notes: "Supervision and coordination"
-                    });
-                }
-            } else if (bundleData.bundleCode === "PKG-PREMIUM-SEC") {
-                // Premium package: Multiple guards, supervisor, equipment
-                const guardService = services.find(s => s.name && s.name.toLowerCase().includes('guard'));
-                const supervisorService = services.find(s => s.name && s.name.toLowerCase().includes('supervisor'));
-                const equipmentService = services.find(s => s.name && (s.name.toLowerCase().includes('equipment') || s.name.toLowerCase().includes('camera')));
-                
-                if (guardService) {
-                    bundleItems.push({
-                        bundleId: savedBundle.id,
-                        childServiceId: guardService.id,
-                        childQty: 4,
-                        include: true,
-                        notes: "24/7 security coverage"
-                    });
-                }
-                
-                if (supervisorService) {
-                    bundleItems.push({
-                        bundleId: savedBundle.id,
-                        childServiceId: supervisorService.id,
-                        childQty: 2,
-                        include: true,
-                        notes: "Day and night supervisors"
-                    });
-                }
-                
-                if (equipmentService) {
-                    bundleItems.push({
-                        bundleId: savedBundle.id,
-                        childServiceId: equipmentService.id,
-                        childQty: 6,
-                        include: true,
-                        notes: "CCTV cameras and monitoring equipment"
-                    });
-                }
-            } else if (bundleData.bundleCode === "PKG-EVENT-SEC") {
-                // Event package: Event-specific services
-                const guardService = services.find(s => s.name && s.name.toLowerCase().includes('guard'));
-                const supervisorService = services.find(s => s.name && s.name.toLowerCase().includes('supervisor'));
-                
-                if (guardService) {
-                    bundleItems.push({
-                        bundleId: savedBundle.id,
-                        childServiceId: guardService.id,
-                        childQty: 6,
-                        include: true,
-                        notes: "Event perimeter and crowd control"
-                    });
-                }
-                
-                if (supervisorService) {
-                    bundleItems.push({
-                        bundleId: savedBundle.id,
-                        childServiceId: supervisorService.id,
-                        childQty: 1,
-                        include: true,
-                        notes: "Event coordination"
-                    });
-                }
-            }
-            
-            // If no specific services found, add first few services as examples
-            if (bundleItems.length === 0 && services.length > 0) {
-                bundleItems = services.slice(0, 3).map((service, index) => ({
-                    bundleId: savedBundle.id,
-                    childServiceId: service.id,
-                    childQty: index + 1,
-                    include: true,
-                    notes: `Sample item ${index + 1}`
-                }));
-            }
-            
-            // Save bundle items
-            for (const itemData of bundleItems) {
-                await fetch('tables/bundle_items', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(itemData)
-                });
-            }
-        }
-        
-        showToast('Sample bundle data added successfully', 'success');
-        await loadBundlesView();
-        
-    } catch (error) {
-        console.error('Error adding sample data:', error);
-        showToast('Failed to add sample data', 'error');
-    } finally {
-        hideLoading();
-    }
-}
+// Sample data helper removed
 
 // Import bundles from Excel
 function importBundlesFromExcel() {
@@ -936,8 +845,15 @@ async function processBundleExcelFile(file) {
                         
                         console.log(`Processing sheet: ${sheetName}`, jsonData);
                         
-                        // Expected columns: Bundle Code, Bundle Name, Service Code, Service Name, Quantity, Include, Notes
+                        // Expected columns (case-insensitive):
+                        //   Bundle Code, Bundle Name, Service Code, Service Name, Quantity, Optional, Include/Included by Default, Notes
                         const bundleGroups = {};
+                        const parseYesNo = (val, def=false) => {
+                            if (typeof val === 'boolean') return val;
+                            if (val === undefined || val === null || String(val).trim() === '') return def;
+                            const s = String(val).trim().toLowerCase();
+                            return s === 'y' || s === 'yes' || s === 'true' || s === '1';
+                        };
                         
                         // Group by bundle
                         for (const row of jsonData) {
@@ -959,7 +875,17 @@ async function processBundleExcelFile(file) {
                             const serviceCode = row['Service Code'] || row['ServiceCode'] || row['service_code'];
                             const serviceName = row['Service Name'] || row['ServiceName'] || row['service_name'];
                             const quantity = parseInt(row['Quantity'] || row['quantity'] || row['Qty'] || 1);
-                            const include = (row['Include'] || row['include'] || 'true').toString().toLowerCase() === 'true';
+                            // Optional and Included by Default parsing
+                            const optRaw = row['Optional'] ?? row['Is Optional'] ?? row['Is Optional (Y/N)'] ?? row['optional'];
+                            const incRaw = row['Included by Default'] ?? row['Included'] ?? row['Include'] ?? row['include'];
+                            let isOptional = parseYesNo(optRaw, false);
+                            let includedByDefault = parseYesNo(incRaw, true);
+                            // Fallback: if Optional is missing but Include is explicitly No, treat as optional not included
+                            if ((optRaw === undefined || optRaw === null || String(optRaw).trim() === '') && includedByDefault === false) {
+                                isOptional = true;
+                            }
+                            // For required items, always included by default
+                            if (!isOptional) includedByDefault = true;
                             const notes = row['Notes'] || row['notes'] || '';
                             
                             if (serviceCode || serviceName) {
@@ -967,7 +893,9 @@ async function processBundleExcelFile(file) {
                                     serviceCode: serviceCode,
                                     serviceName: serviceName,
                                     quantity: quantity,
-                                    include: include,
+                                    isOptional: isOptional,
+                                    defaultSelected: includedByDefault,
+                                    include: isOptional ? includedByDefault : true,
                                     notes: notes
                                 });
                             }
@@ -1015,7 +943,7 @@ async function processBundleExcelFile(file) {
     }
 }
 
-// Import single bundle from Excel data
+// Import single bundle from Excel data (idempotent by bundleCode)
 async function importSingleBundle(bundleData) {
     try {
         // Get available services for mapping
@@ -1023,25 +951,56 @@ async function importSingleBundle(bundleData) {
         const servicesApiData = await servicesResponse.json();
         const availableServices = servicesApiData.data || [];
         
-        // Create bundle
-        const bundlePayload = {
-            bundleCode: bundleData.bundleCode,
-            name: bundleData.name,
-            parentServiceId: null,
-            description: bundleData.description
-        };
+        // Find existing bundle by bundleCode (case-insensitive)
+        let existingBundle = null;
+        try {
+            const bRes = await fetch('tables/bundles');
+            const bData = await bRes.json();
+            const list = bData.data || [];
+            existingBundle = list.find(b => (b.bundleCode || '').toLowerCase() === (bundleData.bundleCode || '').toLowerCase());
+        } catch {}
         
-        const bundleResponse = await fetch('tables/bundles', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(bundlePayload)
-        });
-        
-        if (!bundleResponse.ok) {
-            throw new Error(`Failed to create bundle: ${bundleResponse.statusText}`);
+        let savedBundle = existingBundle;
+        if (existingBundle) {
+            // Update existing bundle metadata
+            const updatePayload = {
+                name: bundleData.name,
+                description: bundleData.description
+            };
+            const putRes = await fetch(`tables/bundles/${existingBundle.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatePayload)
+            });
+            if (!putRes.ok) throw new Error('Failed to update existing bundle');
+            savedBundle = await putRes.json();
+            // Remove existing items to make import idempotent
+            try {
+                const itemsResponse = await fetch(`tables/bundle_items?search=${savedBundle.id}`);
+                const itemsData = await itemsResponse.json();
+                const items = (itemsData.data || []).filter(it => it.bundleId === savedBundle.id);
+                for (const it of items) {
+                    await fetch(`tables/bundle_items/${it.id}`, { method: 'DELETE' });
+                }
+            } catch {}
+        } else {
+            // Create bundle
+            const bundlePayload = {
+                bundleCode: bundleData.bundleCode,
+                name: bundleData.name,
+                parentServiceId: null,
+                description: bundleData.description
+            };
+            const bundleResponse = await fetch('tables/bundles', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bundlePayload)
+            });
+            if (!bundleResponse.ok) {
+                throw new Error(`Failed to create bundle: ${bundleResponse.statusText}`);
+            }
+            savedBundle = await bundleResponse.json();
         }
-        
-        const savedBundle = await bundleResponse.json();
         
         // Create bundle items
         for (const item of bundleData.items) {
@@ -1066,10 +1025,13 @@ async function importSingleBundle(bundleData) {
                         bundleId: savedBundle.id,
                         childServiceId: matchingService.id,
                         childQty: item.quantity || 1,
-                        include: item.include !== false,
+                        // Bundle-level optionality
+                        isOptional: !!item.isOptional,
+                        defaultSelected: item.isOptional ? !!item.defaultSelected : true,
+                        // Legacy field kept for readers that still expect it
+                        include: item.isOptional ? !!item.defaultSelected : true,
                         notes: item.notes || ''
                     };
-                    
                     await fetch('tables/bundle_items', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1115,12 +1077,28 @@ async function exportBundlesReport() {
         for (const bundle of bundles) {
             const itemsResponse = await fetch(`tables/bundle_items?search=${bundle.id}`);
             const itemsData = await itemsResponse.json();
-            const items = itemsData.data || [];
-            
-            const availableServices = window.services || services || [];
-            
+            // Strictly limit to this bundle's items (search returns fuzzy matches)
+            const items = (itemsData.data || []).filter(it => it.bundleId === bundle.id);
+
+            // Ensure services are available
+            let availableServices = window.services || services || [];
+            if (!availableServices || availableServices.length === 0) {
+                try {
+                    const svcRes = await fetch('tables/services');
+                    if (svcRes.ok) {
+                        const svcData = await svcRes.json();
+                        availableServices = svcData.data || [];
+                        window.services = availableServices;
+                    }
+                } catch {}
+            }
+
             items.forEach(item => {
                 const service = availableServices.find(s => s.id === item.childServiceId);
+                const isOptional = typeof item.isOptional === 'boolean' ? item.isOptional : false;
+                const includedByDefault = isOptional
+                    ? (typeof item.defaultSelected === 'boolean' ? item.defaultSelected : (item.include !== false))
+                    : true; // required items always included
                 exportData.push({
                     'Bundle Code': bundle.bundleCode,
                     'Bundle Name': bundle.name,
@@ -1129,7 +1107,8 @@ async function exportBundlesReport() {
                     'Quantity': item.childQty || 1,
                     'Base Rate': service ? service.baseRate || 0 : 0,
                     'Total Cost': (service ? service.baseRate || 0 : 0) * (item.childQty || 1),
-                    'Include': item.include ? 'Yes' : 'No',
+                    'Optional': isOptional ? 'Yes' : 'No',
+                    'Include': includedByDefault ? 'Yes' : 'No',
                     'Notes': item.notes || ''
                 });
             });

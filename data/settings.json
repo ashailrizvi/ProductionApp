@@ -19,6 +19,9 @@
     "_self": "dbs/pBtjAA==/colls/pBtjAL8RWCc=/docs/pBtjAL8RWCfTVCYAAAAAAA==/",
     "_etag": "\"7904c7dc-0000-0800-0000-68f3af3a0000\"",
     "_attachments": "attachments/",
-    "_ts": 1760800570
+    "_ts": 1760800570,
+    "customUnits": [
+      "per asset"
+    ]
   }
 ]
