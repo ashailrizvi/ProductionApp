@@ -1,5 +1,6 @@
 name = "production-app-pages"
 compatibility_date = "2024-05-01"
+pages_build_output_dir = "."
 
 [observability]
 enabled = true
@@ -8,4 +9,3 @@ enabled = true
 binding = "DB"            # Used in functions as env.DB
 database_name = "production_qi"
 database_id = "REPLACE_WITH_YOUR_D1_ID"
-

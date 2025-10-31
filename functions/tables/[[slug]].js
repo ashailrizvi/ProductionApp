@@ -173,4 +173,3 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({ error: 'Server error', detail: String(err && err.message || err) }), { status: 500, headers: headers() });
   }
 }
-
