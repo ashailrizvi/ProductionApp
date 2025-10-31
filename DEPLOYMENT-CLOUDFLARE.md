@@ -18,9 +18,17 @@ D1 Database
 
 Bind D1 to Pages
 ----------------
-- Pages → Your Project → Settings → Functions → D1 Bindings → Add
+- Pages → Your Project → Settings → Bindings → Add binding
+- Type: D1 database
 - Binding name: `DB`
 - Database: select your `production_qi` database
+
+Note: If the Add binding button is disabled with a message saying
+“Bindings for this project are being managed through wrangler.toml”,
+it means the repo contains a `wrangler.toml`. This project now ships
+`wrangler.local.example.toml` instead. If you still have a committed
+`wrangler.toml`, delete or rename it so Pages switches to dashboard‑managed
+bindings, then redeploy.
 
 How It Works
 ------------
@@ -52,4 +60,3 @@ Seeding Data
     - Example with curl:
       - `curl -X POST https://<your-pages-domain>/admin/seed -H "x-seed-token: <token>"`
   - Response includes `inserted` count.
-
