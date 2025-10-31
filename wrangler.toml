@@ -5,7 +5,6 @@ pages_build_output_dir = "."
 [observability]
 enabled = true
 
-[[d1_databases]]
-binding = "DB"            # Used in functions as env.DB
-database_name = "production_qi"
-database_id = "REPLACE_WITH_YOUR_D1_ID"
+# Note: Do NOT configure D1 here for Pages CI.
+# Add the D1 binding in the Cloudflare Pages dashboard instead:
+# Pages → Project → Settings → Functions → D1 Bindings → Add (binding name: DB)
