@@ -1,6 +1,6 @@
 # Production Quotes & Invoices System
 
-A comprehensive web-based application for managing production services, quotations, invoices, customer relationships, and business workflow. Built with modern web technologies and designed specifically for production companies to streamline their quote-to-invoice process.
+A comprehensive web-based application for managing content production services, quotations, invoices, customer relationships, and business workflow. Built with modern web technologies and designed specifically for production companies to streamline their quote-to-invoice process.
 
 ## What's New (Latest Updates)
 
